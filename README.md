@@ -56,7 +56,7 @@ secret-santa/
 ### Prerequisites
 
 * Node.js v18+ and `pnpm` installed (`npm i -g pnpm`).
-* Python 3.11+ installed.
+* Python 3.11+ and `uv` package manager installed.
 * AWS CLI configured (`aws configure`).
 
 ### 1. Build Frontend
@@ -71,8 +71,9 @@ pnpm run build
 
 ```bash
 cd ../backend
+uv sync
 npm install
-PYTHONPATH=. python3 tests/test_santa_draw.py
+uv run python tests/test_santa_draw.py
 
 # Deploy full stack to AWS
 npx serverless deploy --stage dev --sender-email "notifications@yourdomain.com"

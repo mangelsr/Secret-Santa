@@ -17,6 +17,7 @@ Serverless Backend written in **FastAPI** and packaged for **AWS Lambda** using 
 ## 🎲 Secret Santa Draw Engine (`app/core/santa_draw.py`)
 
 The draw engine solves historical exclusion constraints using a **Randomized Backtracking Algorithm over a Directed Graph**:
+
 1. For each participant $u$, get their set of exclusions $E(u)$ (family members they gifted to in previous years).
 2. Filter invalid targets: $v \neq u$ and $v \notin E(u)$.
 3. Recursively explore assignments where every participant gives exactly 1 gift and receives 1 gift.
@@ -27,7 +28,7 @@ The draw engine solves historical exclusion constraints using a **Randomized Bac
 ## 📡 REST API Endpoints
 
 | Method | Path | Description |
-|---|---|---|
+| --- | --- | --- |
 | `POST` | `/api/v1/groups` | Create a new Christmas group with an admin passcode |
 | `GET` | `/api/v1/groups/{group_id}` | Get group details and public list of participants |
 | `POST` | `/api/v1/groups/{group_id}/participants` | Register a participant specifying historical exclusions |
@@ -40,16 +41,16 @@ The draw engine solves historical exclusion constraints using a **Randomized Bac
 ## 💻 Local Development & Testing
 
 ```bash
-# 1. Create virtual environment and install dependencies
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# 1. Install dependencies and create virtual environment using uv
+uv sync
 
 # 2. Run local FastAPI dev server
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 
 # 3. Run draw algorithm unit tests
-PYTHONPATH=. python3 tests/test_santa_draw.py
+uv run python tests/test_santa_draw.py
+# or using pytest
+uv run pytest
 ```
 
 ---
