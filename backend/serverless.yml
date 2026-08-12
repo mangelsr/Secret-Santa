@@ -11,7 +11,7 @@ provider:
   timeout: 15
   environment:
     GROUPS_TABLE: ${self:custom.groupsTableName}
-    SES_SENDER_EMAIL: ${opt:sender-email, 'notificaciones@tudominio.com'}
+    SES_SENDER_EMAIL: ${param:sender-email, opt:sender-email, 'notificaciones@tudominio.com'}
     STAGE: ${self:provider.stage}
   iam:
     role:
@@ -41,6 +41,7 @@ custom:
   frontendBucketName: santa-secreto-frontend-${self:provider.stage}
   
   pythonRequirements:
+    pythonBin: .venv/bin/python
     dockerizePip: false
     layer: true
 
