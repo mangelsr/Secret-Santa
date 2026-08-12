@@ -1,0 +1,19 @@
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# Serverless Framework artifacts
+.serverless/
+.build/
+.requirements/
+node_modules/
+
+# Environment Variables
+.env
+.env.local
