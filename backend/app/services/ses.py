@@ -1,5 +1,4 @@
 import boto3
-from typing import Dict, Any
 from app.core.config import settings
 
 class SESService:
@@ -14,9 +13,9 @@ class SESService:
         group_name: str
     ) -> bool:
         """
-        Envía un correo individual mediante AWS SES informando quién es el amigo secreto asignado.
+        Sends an individual email via AWS SES revealing the assigned Secret Santa target.
         """
-        subject = f"🎄 ¡Tu Amigo Secreto en '{group_name}' ha sido asignado! 🎁"
+        subject = f"🎄 Your Secret Santa target for '{group_name}' has been assigned! 🎁"
         
         html_body = f"""
         <!DOCTYPE html>
@@ -37,21 +36,21 @@ class SESService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>🎅 Santa Secreto Navideño 🎁</h1>
+                    <h1>🎅 Christmas Secret Santa 🎁</h1>
                 </div>
                 <div class="content">
-                    <h2>¡Hola {giver_name}!</h2>
-                    <p>El grupo <strong>{group_name}</strong> ha cerrado su registro y el sorteo oficial se ha realizado con éxito.</p>
+                    <h2>Hello {giver_name}!</h2>
+                    <p>The group <strong>{group_name}</strong> has finalized registration and the official draw has been performed successfully.</p>
                     
                     <div class="card">
-                        <p style="margin:0; font-size:16px; color:#4a5568;">Te ha tocado darle regalo a:</p>
+                        <p style="margin:0; font-size:16px; color:#4a5568;">Your assigned Secret Santa recipient is:</p>
                         <div class="target-name">✨ {receiver_name} ✨</div>
                     </div>
                     
-                    <p style="color: #718096; font-size: 14px;">Recuerda mantener el secreto hasta el día de la entrega de regalos. ¡Felices Fiestas!</p>
+                    <p style="color: #718096; font-size: 14px;">Remember to keep it secret until gift exchange day. Happy Holidays!</p>
                 </div>
                 <div class="footer">
-                    Organizado con Santa Secreto App • Navidades en Familia 🎄
+                    Organized with Secret Santa App • Family Christmas 🎄
                 </div>
             </div>
         </body>
@@ -69,7 +68,7 @@ class SESService:
             )
             return True
         except Exception as e:
-            print(f"Error al enviar correo a {giver_email} vía SES: {str(e)}")
+            print(f"Error sending email to {giver_email} via SES: {str(e)}")
             return False
 
 ses_service = SESService()

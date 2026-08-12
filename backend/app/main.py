@@ -6,14 +6,14 @@ from app.core.config import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Backend Serverless para gestión del sorteo de Santa Secreto Familiar",
+    description="Serverless backend for managing family Secret Santa draws",
     version="1.0.0"
 )
 
-# Configuración CORS para permitir peticiones desde la SPA React
+# CORS configuration allowing requests from React SPA
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción se puede restringir al dominio de Cloudflare
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,5 +21,5 @@ app.add_middleware(
 
 app.include_router(router)
 
-# Handler ASGI para AWS Lambda
+# ASGI Handler for AWS Lambda
 handler = Mangum(app)

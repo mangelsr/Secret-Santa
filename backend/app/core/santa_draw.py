@@ -3,10 +3,10 @@ from typing import Dict, List, Optional
 
 def generate_secret_santa_draw(participants: List[dict]) -> Optional[Dict[str, str]]:
     """
-    Algoritmo de Sorteo de Santa Secreto con Restricciones (Exclusiones históricas).
+    Secret Santa Matching Algorithm with Historical Exclusion Constraints.
     
-    :param participants: Lista de diccionarios con 'participant_id', 'name', 'excluded_participant_ids'
-    :return: Mapeo de giver_id -> receiver_id o None si es imposible resolver el grafo.
+    :param participants: List of dicts with 'participant_id', 'name', 'excluded_participant_ids'
+    :return: Dictionary mapping giver_id -> receiver_id or None if graph cannot be solved.
     """
     if len(participants) < 3:
         return None
@@ -18,9 +18,9 @@ def generate_secret_santa_draw(participants: List[dict]) -> Optional[Dict[str, s
     for p in participants:
         p_id = p['participant_id']
         exclusions = set(p.get('excluded_participant_ids', []))
-        exclusions.add(p_id)  # Regla 1: No puede regalarse a sí mismo
+        exclusions.add(p_id)  # Rule 1: Cannot give to oneself
         
-        # Opciones válidas = Lista de participantes menos exclusiones
+        # Valid candidates = All participants minus exclusions
         candidates = [target_id for target_id in p_ids if target_id not in exclusions]
         random.shuffle(candidates)
         valid_targets[p_id] = candidates
@@ -43,7 +43,7 @@ def generate_secret_santa_draw(participants: List[dict]) -> Optional[Dict[str, s
                 if backtrack(idx + 1):
                     return True
 
-                # Undo backtrack
+                # Undo backtrack step
                 assigned_receivers.remove(receiver)
                 del assignment[giver]
 

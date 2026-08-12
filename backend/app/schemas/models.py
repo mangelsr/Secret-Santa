@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional
+from typing import List
 
 class CreateGroupRequest(BaseModel):
-    name: str = Field(..., description="Nombre del grupo (ej: Navidad Familia García)")
-    admin_email: EmailStr = Field(..., description="Email del organizador del grupo")
-    admin_passcode: str = Field(..., min_length=4, description="Clave de administrador para cerrar el grupo")
+    name: str = Field(..., description="Group name (e.g. Garcia Family Christmas 2026)")
+    admin_email: EmailStr = Field(..., description="Organizer email address")
+    admin_passcode: str = Field(..., min_length=4, description="Admin passcode to finalize and execute the draw")
 
 class GroupPublicResponse(BaseModel):
     group_id: str
@@ -14,11 +14,11 @@ class GroupPublicResponse(BaseModel):
     created_at: str
 
 class RegisterParticipantRequest(BaseModel):
-    name: str = Field(..., description="Nombre completo del participante")
-    email: EmailStr = Field(..., description="Correo del participante para recibir el aviso")
+    name: str = Field(..., description="Participant full name")
+    email: EmailStr = Field(..., description="Participant email address to receive secret assignment")
     excluded_participant_ids: List[str] = Field(
         default_factory=list, 
-        description="IDs o nombres de integrantes a los que ya se les ha dado regalo anteriormente"
+        description="IDs or names of family members previously gifted to in past years"
     )
 
 class ParticipantPublicResponse(BaseModel):
@@ -33,4 +33,4 @@ class GroupWithParticipantsResponse(GroupPublicResponse):
     participants: List[ParticipantPublicResponse]
 
 class ExecuteDrawRequest(BaseModel):
-    admin_passcode: str = Field(..., description="Clave de administración para autorizar el sorteo")
+    admin_passcode: str = Field(..., description="Admin passcode to authorize the draw")

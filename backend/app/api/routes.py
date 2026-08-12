@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Header, status
-from typing import List, Optional
+from typing import Optional
 
 from app.schemas.models import (
     CreateGroupRequest, 
@@ -42,7 +42,7 @@ def create_group(payload: CreateGroupRequest):
 def get_group_details(group_id: str):
     group = db_service.get_group(group_id)
     if not group:
-        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        raise HTTPException(status_code=404, detail="Group not found")
         
     participants_raw = db_service.get_participants(group_id)
     participants = [
@@ -69,15 +69,15 @@ def get_group_details(group_id: str):
 def register_participant(group_id: str, payload: RegisterParticipantRequest):
     group = db_service.get_group(group_id)
     if not group:
-        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        raise HTTPException(status_code=404, detail="Group not found")
         
     if group["status"] != "OPEN":
-        raise HTTPException(status_code=400, detail="El grupo ya se encuentra cerrado para nuevos registros")
+        raise HTTPException(status_code=400, detail="The group is already closed for new registrations")
 
-    # Verificar si el correo ya está registrado en este grupo
+    # Check if email is already registered in this group
     existing_participants = db_service.get_participants(group_id)
     if any(p["email"].lower() == payload.email.lower() for p in existing_participants):
-        raise HTTPException(status_code=400, detail="Este correo electrónico ya está inscrito en el grupo")
+        raise HTTPException(status_code=400, detail="This email address is already registered in this group")
 
     participant_id = f"p-{uuid.uuid4().hex[:8]}"
     created_at = datetime.utcnow().isoformat()
@@ -104,13 +104,13 @@ def register_participant(group_id: str, payload: RegisterParticipantRequest):
 def remove_participant(group_id: str, participant_id: str, x_admin_passcode: Optional[str] = Header(None)):
     group = db_service.get_group(group_id)
     if not group:
-        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        raise HTTPException(status_code=404, detail="Group not found")
         
     if group["admin_passcode"] != x_admin_passcode:
-        raise HTTPException(status_code=401, detail="Clave de administrador incorrecta")
+        raise HTTPException(status_code=401, detail="Incorrect admin passcode")
         
     if group["status"] != "OPEN":
-        raise HTTPException(status_code=400, detail="No se pueden modificar miembros en un grupo cerrado")
+        raise HTTPException(status_code=400, detail="Cannot modify members in a closed group")
 
     db_service.delete_participant(group_id, participant_id)
     return None
@@ -119,30 +119,30 @@ def remove_participant(group_id: str, participant_id: str, x_admin_passcode: Opt
 def execute_group_draw(group_id: str, payload: ExecuteDrawRequest):
     group = db_service.get_group(group_id)
     if not group:
-        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        raise HTTPException(status_code=404, detail="Group not found")
 
     if group["admin_passcode"] != payload.admin_passcode:
-        raise HTTPException(status_code=401, detail="Clave de administrador incorrecta")
+        raise HTTPException(status_code=401, detail="Incorrect admin passcode")
 
     if group["status"] != "OPEN":
-        raise HTTPException(status_code=400, detail="El sorteo ya ha sido realizado previamente para este grupo")
+        raise HTTPException(status_code=400, detail="The draw has already been performed for this group")
 
     participants = db_service.get_participants(group_id)
     if len(participants) < 3:
-        raise HTTPException(status_code=400, detail="Se requieren al menos 3 participantes inscritos para realizar el sorteo")
+        raise HTTPException(status_code=400, detail="At least 3 participants are required to perform the draw")
 
-    # Ejecutar algoritmo de sorteo con exclusiones
+    # Execute randomized Secret Santa matching algorithm with exclusions
     draw_results = generate_secret_santa_draw(participants)
     if not draw_results:
         raise HTTPException(
             status_code=400, 
-            detail="No se pudo encontrar una asignación válida respetando las exclusiones indicadas. Revisa si hay demasiadas restricciones recíprocas."
+            detail="Could not find a valid assignment matching all exclusion rules. Check if there are too many conflicting restrictions."
         )
 
-    # Mapear IDs a Objetos Participante
+    # Map Participant IDs to Objects
     part_map = {p["participant_id"]: p for p in participants}
 
-    # Despachar correos vía AWS SES
+    # Dispatch individual emails via AWS SES
     emails_sent = 0
     for giver_id, receiver_id in draw_results.items():
         giver = part_map[giver_id]
@@ -157,11 +157,11 @@ def execute_group_draw(group_id: str, payload: ExecuteDrawRequest):
         if success:
             emails_sent += 1
 
-    # Marcar grupo como cerrado
+    # Mark group as closed
     db_service.close_group(group_id)
 
     return {
-        "message": "Sorteo completado y correos enviados con éxito vía AWS SES",
+        "message": "Draw completed and emails dispatched successfully via AWS SES",
         "total_participants": len(participants),
         "emails_sent": emails_sent
     }
