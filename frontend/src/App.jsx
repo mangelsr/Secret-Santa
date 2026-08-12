@@ -5,6 +5,9 @@ import RegisterModal from './components/RegisterModal';
 import AdminDrawModal from './components/AdminDrawModal';
 import { getGroupDetails } from './services/api';
 
+/**
+ * Main application component managing active group view and modals.
+ */
 export default function App() {
   const [groupId, setGroupId] = useState('');
   const [group, setGroup] = useState(null);
@@ -16,7 +19,7 @@ export default function App() {
   const [isAdminDrawOpen, setIsAdminDrawOpen] = useState(false);
   const [drawSuccessInfo, setDrawSuccessInfo] = useState(null);
 
-  // Detectar ID de grupo desde Hash o Query Params
+  // Parse Group ID from URL Hash or Query Parameters
   useEffect(() => {
     const parseGroupId = () => {
       const hash = window.location.hash.replace('#', '');
@@ -64,7 +67,7 @@ export default function App() {
       <Navbar onCreateClick={() => setIsCreateOpen(true)} currentGroup={group} />
 
       <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
-        {/* Banner de búsqueda rápida o cambio de grupo */}
+        {/* Landing Section / Group Lookup */}
         {!group && !loading && (
           <div className="glass-card" style={{ padding: '48px 32px', textAlign: 'center', margin: '40px 0' }}>
             <span style={{ fontSize: '4rem', display: 'block', marginBottom: '16px' }}>🎄🎅🎁</span>
@@ -115,10 +118,10 @@ export default function App() {
           </div>
         )}
 
-        {/* Vista del Grupo Activo */}
+        {/* Active Group Dashboard */}
         {group && (
           <div>
-            {/* Header del Grupo */}
+            {/* Group Header Card */}
             <div className="glass-card glow-gold" style={{ padding: '32px', marginBottom: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
@@ -152,7 +155,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Banner de Éxito de Sorteo */}
+            {/* Draw Success Alert Banner */}
             {drawSuccessInfo && (
               <div className="glass-card" style={{ padding: '24px', marginBottom: '32px', background: 'rgba(34,197,94,0.2)', border: '1px solid #22c55e' }}>
                 <h3 style={{ color: '#4ade80', fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>🎉 ¡Sorteo completado con éxito!</h3>
@@ -162,7 +165,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Lista de Miembros Inscritos */}
+            {/* Registered Participants Grid */}
             <div className="glass-card" style={{ padding: '32px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: '700' }}>
@@ -172,7 +175,7 @@ export default function App() {
               </div>
 
               {(!group.participants || group.participants.length === 0) ? (
-                <div style={{ textAlgin: 'center', padding: '40px', color: '#64748b' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                   <p style={{ fontSize: '1.1rem', marginBottom: '12px' }}>Aún no hay familiares inscritos en este grupo.</p>
                   <button className="btn-festive" onClick={() => setIsRegisterOpen(true)}>Sé el primero en inscribirte</button>
                 </div>
@@ -202,7 +205,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Modales */}
+      {/* Modals */}
       <CreateGroupModal 
         isOpen={isCreateOpen} 
         onClose={() => setIsCreateOpen(false)} 

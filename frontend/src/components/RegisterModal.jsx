@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { registerParticipant } from '../services/api';
 
+/**
+ * Modal component for participant signup and selection of historical gift exclusions.
+ */
 export default function RegisterModal({ isOpen, onClose, groupId, existingParticipants, onParticipantRegistered }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

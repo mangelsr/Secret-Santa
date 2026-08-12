@@ -1,5 +1,8 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
+/**
+ * Creates a new Christmas Secret Santa group.
+ */
 export async function createGroup(name, adminEmail, adminPasscode) {
   const response = await fetch(`${API_BASE_URL}/groups`, {
     method: 'POST',
@@ -13,6 +16,9 @@ export async function createGroup(name, adminEmail, adminPasscode) {
   return await response.json();
 }
 
+/**
+ * Fetches group metadata and public participant list.
+ */
 export async function getGroupDetails(groupId) {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}`);
   if (!response.ok) {
@@ -22,6 +28,9 @@ export async function getGroupDetails(groupId) {
   return await response.json();
 }
 
+/**
+ * Registers a new participant specifying historical gift exclusions.
+ */
 export async function registerParticipant(groupId, name, email, excludedParticipantIds) {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants`, {
     method: 'POST',
@@ -39,6 +48,9 @@ export async function registerParticipant(groupId, name, email, excludedParticip
   return await response.json();
 }
 
+/**
+ * Triggers the Secret Santa draw and dispatches email notifications via AWS SES.
+ */
 export async function executeDraw(groupId, adminPasscode) {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/draw`, {
     method: 'POST',
@@ -52,6 +64,9 @@ export async function executeDraw(groupId, adminPasscode) {
   return await response.json();
 }
 
+/**
+ * Removes a participant from an open group (Admin action).
+ */
 export async function removeParticipant(groupId, participantId, adminPasscode) {
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants/${participantId}`, {
     method: 'DELETE',

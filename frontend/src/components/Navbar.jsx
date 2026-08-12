@@ -1,6 +1,15 @@
 import React from 'react';
 
+/**
+ * Navbar component featuring festive brand header and action buttons.
+ */
 export default function Navbar({ onCreateClick, currentGroup }) {
+  const handleCopyLink = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    alert('¡Enlace del grupo copiado al portapapeles!');
+  };
+
   return (
     <nav className="glass-card" style={{ borderRadius: '0 0 16px 16px', padding: '16px 32px', marginBottom: '40px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -16,11 +25,7 @@ export default function Navbar({ onCreateClick, currentGroup }) {
 
         <div style={{ display: 'flex', gap: '12px' }}>
           {currentGroup && (
-            <button className="btn-secondary" onClick={() => {
-              const url = window.location.href;
-              navigator.clipboard.writeText(url);
-              alert('¡Enlace del grupo copiado al portapapeles!');
-            }}>
+            <button className="btn-secondary" onClick={handleCopyLink}>
               🔗 Copiar Enlace
             </button>
           )}

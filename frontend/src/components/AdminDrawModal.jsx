@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { executeDraw } from '../services/api';
 
+/**
+ * Modal component for organizer confirmation and Secret Santa draw execution.
+ */
 export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess }) {
   const [adminPasscode, setAdminPasscode] = useState('');
   const [loading, setLoading] = useState(false);
