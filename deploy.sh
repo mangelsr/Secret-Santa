@@ -2,9 +2,9 @@
 # ==============================================================================
 # Secret Santa Application Deployment Script 🎅🎁
 # ==============================================================================
-# Executes all required steps to build the React frontend SPA, test the Python
-# FastAPI backend, and deploy the entire serverless stack to AWS using the
-# Serverless Framework.
+# Executes all required steps to test the Python FastAPI backend, deploy the
+# AWS Lambda container image via ECR, retrieve the live API Gateway URL, build
+# the React SPA with the live API URL, and sync static assets to AWS S3.
 # ==============================================================================
 
 set -e # Exit immediately if a command exits with a non-zero status
@@ -168,27 +168,7 @@ log_info "Deployment Stage: ${BOLD}${STAGE}${NC}"
 log_info "AWS Region: ${BOLD}${REGION}${NC}"
 log_info "SES Sender Email: ${BOLD}${SENDER_EMAIL}${NC}"
 
-log_step "2. Building Frontend Application"
-cd "$ROOT_DIR/frontend"
-
-log_info "Installing frontend dependencies..."
-$PKG_MANAGER install
-
-log_info "Building production SPA bundle with Vite..."
-if [ "$PKG_MANAGER" = "pnpm" ]; then
-    pnpm run build
-else
-    npm run build
-fi
-
-if [ -d "$ROOT_DIR/frontend/dist" ]; then
-    log_success "Frontend static bundle built successfully at frontend/dist"
-else
-    log_error "Frontend build failed: frontend/dist directory missing!"
-    exit 1
-fi
-
-log_step "3. Preparing & Testing Backend"
+log_step "2. Preparing & Testing Backend"
 cd "$ROOT_DIR/backend"
 
 log_info "Checking Python environment..."
@@ -215,14 +195,10 @@ else
 fi
 
 log_info "Installing Serverless Framework plugins in backend..."
-pnpm install
+$PKG_MANAGER install
 
-log_step "4. Deploying Infrastructure to AWS via Serverless Framework"
+log_step "3. Deploying Backend Stack to AWS via Serverless Framework"
 cd "$ROOT_DIR/backend"
-
-log_info "Cleaning up stale build artifacts (.serverless & python-requirements cache)..."
-rm -rf "$ROOT_DIR/backend/.serverless"
-rm -rf ~/.cache/serverless-python-requirements
 
 log_info "Executing 'npx serverless deploy --stage $STAGE --region $REGION --param=\"sender-email=$SENDER_EMAIL\"'..."
 npx serverless deploy \
@@ -230,9 +206,44 @@ npx serverless deploy \
     --region "$REGION" \
     --param="sender-email=$SENDER_EMAIL"
 
-log_step "5. Deployment Complete! 🎄✨"
-log_success "Successfully deployed Secret Santa application!"
+log_step "4. Querying Deployed API Gateway URL & Building Frontend"
+STACK_NAME="santa-secreto-app-${STAGE}"
+HTTP_API_URL=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" --output text 2>/dev/null || echo "")
+
+if [ -n "$HTTP_API_URL" ] && [ "$HTTP_API_URL" != "None" ]; then
+    API_ENDPOINT="${HTTP_API_URL}/api/v1"
+    log_success "Detected deployed Backend API Endpoint: ${BOLD}${API_ENDPOINT}${NC}"
+else
+    log_warning "Could not query HttpApiUrl from CloudFormation. Falling back to default stage API URL format."
+    API_ENDPOINT="http://localhost:8000/api/v1"
+fi
+
+cd "$ROOT_DIR/frontend"
+log_info "Installing frontend dependencies..."
+$PKG_MANAGER install
+
+log_info "Building production SPA bundle with VITE_API_URL=${API_ENDPOINT}..."
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    VITE_API_URL="$API_ENDPOINT" pnpm run build
+else
+    VITE_API_URL="$API_ENDPOINT" npm run build
+fi
+
+if [ -d "$ROOT_DIR/frontend/dist" ]; then
+    log_success "Frontend static bundle built successfully with live API URL!"
+else
+    log_error "Frontend build failed: frontend/dist directory missing!"
+    exit 1
+fi
+
+log_step "5. Synchronizing Frontend Assets to AWS S3"
+cd "$ROOT_DIR/backend"
+log_info "Uploading frontend SPA bundle to S3 website bucket..."
+npx serverless s3sync
+
+log_step "6. Deployment Complete! 🎄✨"
+log_success "Successfully deployed Secret Santa full-stack application!"
 log_info "Stage: $STAGE"
 log_info "Region: $REGION"
 log_info "SES Sender Email: $SENDER_EMAIL"
-echo -e "${CYAN}Note:${NC} The frontend static files (dist/) were automatically synchronized to the S3 web bucket via serverless-s3-sync."
+log_info "API Gateway Endpoint: ${BOLD}${API_ENDPOINT}${NC}"

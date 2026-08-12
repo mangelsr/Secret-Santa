@@ -13,9 +13,6 @@ provider:
       appimage:
         path: ./
         file: Dockerfile
-        buildOptions:
-          - "--provenance=false"
-          - "--platform=linux/amd64"
   environment:
     GROUPS_TABLE: ${self:custom.groupsTableName}
     SES_SENDER_EMAIL: ${param:sender-email, opt:sender-email, 'notificaciones@tudominio.com'}
