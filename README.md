@@ -51,7 +51,7 @@ secret-santa/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start & Deployment
 
 ### Prerequisites
 
@@ -59,7 +59,21 @@ secret-santa/
 * Python 3.11+ and `uv` package manager installed.
 * AWS CLI configured (`aws configure`).
 
-### 1. Build Frontend
+### Automated Deployment (Recommended)
+
+Run the root deployment script to automatically check prerequisites, build the React frontend, run Python unit tests, and deploy to AWS:
+
+```bash
+# Basic deployment (defaults to dev stage, us-east-1)
+./deploy.sh
+
+# Deployment with custom stage, region, and verified SES sender email
+./deploy.sh --stage prod --region us-east-1 --sender-email "notifications@yourdomain.com"
+```
+
+### Manual Step-by-Step Deployment
+
+#### 1. Build Frontend
 
 ```bash
 cd frontend
@@ -67,14 +81,14 @@ pnpm install
 pnpm run build
 ```
 
-### 2. Test and Deploy Backend
+#### 2. Test and Deploy Stack
 
 ```bash
 cd ../backend
 uv sync
 npm install
-uv run python tests/test_santa_draw.py
+uv run pytest
 
 # Deploy full stack to AWS
-npx serverless deploy --stage dev --sender-email "notifications@yourdomain.com"
+npx serverless deploy --stage dev --param="sender-email=notifications@yourdomain.com"
 ```

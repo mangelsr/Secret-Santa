@@ -4,11 +4,18 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: python3.11
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   memorySize: 512
   timeout: 15
+  ecr:
+    images:
+      appimage:
+        path: ./
+        file: Dockerfile
+        buildOptions:
+          - "--provenance=false"
+          - "--platform=linux/amd64"
   environment:
     GROUPS_TABLE: ${self:custom.groupsTableName}
     SES_SENDER_EMAIL: ${param:sender-email, opt:sender-email, 'notificaciones@tudominio.com'}
@@ -33,17 +40,11 @@ provider:
           Resource: "*"
 
 plugins:
-  - serverless-python-requirements
   - serverless-s3-sync
 
 custom:
   groupsTableName: santa-secreto-groups-${self:provider.stage}
   frontendBucketName: santa-secreto-frontend-${self:provider.stage}
-  
-  pythonRequirements:
-    pythonBin: .venv/bin/python
-    dockerizePip: false
-    layer: true
 
   s3Sync:
     - bucketName: ${self:custom.frontendBucketName}
@@ -52,9 +53,8 @@ custom:
 
 functions:
   api:
-    handler: app.main.handler
-    layers:
-      - Ref: PythonRequirementsLambdaLayer
+    image:
+      name: appimage
     events:
       - httpApi:
           path: '/{proxy+}'
@@ -88,6 +88,11 @@ resources:
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: index.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
 
     FrontendBucketPolicy:
       Type: AWS::S3::BucketPolicy
