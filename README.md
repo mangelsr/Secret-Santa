@@ -24,7 +24,7 @@ A serverless web application to organize **Secret Santa** gift exchanges for Chr
 ### Tech Stack
 
 * **Frontend:** React, Vite, `pnpm`, CSS3 with Glassmorphic aesthetic and responsive layout.
-* **Backend:** FastAPI, Mangum (ASGI adapter), Python 3.11, Pydantic, Boto3.
+* **Backend:** FastAPI, Mangum (ASGI adapter), Python 3.14, Pydantic, Boto3.
 * **Infrastructure as Code (IaC):** Serverless Framework v3 (`serverless.yml`).
 * **AWS Services:** AWS Lambda, AWS API Gateway, AWS DynamoDB, AWS S3, AWS SES.
 * **CDN & DNS:** Cloudflare CDN with HTTPS proxy and SPA fallback routing.
@@ -56,7 +56,7 @@ secret-santa/
 ### Prerequisites
 
 * Node.js v18+ and `pnpm` installed (`npm i -g pnpm`).
-* Python 3.11+ and `uv` package manager installed.
+* Python 3.14+ and `uv` package manager installed.
 * AWS CLI configured (`aws configure`).
 
 ### Automated Deployment (Recommended)
