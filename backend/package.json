@@ -4,8 +4,8 @@
   "description": "Backend Serverless en FastAPI + Lambda + DynamoDB + SES para Santa Secreto",
   "main": "app/main.py",
   "devDependencies": {
-    "serverless": "^3.38.0",
-    "serverless-python-requirements": "^6.0.1",
-    "serverless-s3-sync": "^3.2.0"
+    "serverless": "^3.40.0",
+    "serverless-python-requirements": "^6.1.2",
+    "serverless-s3-sync": "^3.5.1"
   }
 }
