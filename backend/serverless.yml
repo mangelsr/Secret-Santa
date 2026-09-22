@@ -1,6 +1,6 @@
 service: santa-secreto-app
 
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -54,11 +54,11 @@ functions:
       name: appimage
     events:
       - httpApi:
-          path: '/{proxy+}'
-          method: '*'
+          path: "/{proxy+}"
+          method: "*"
       - httpApi:
-          path: '/'
-          method: '*'
+          path: "/"
+          method: "*"
 
 resources:
   Resources:
@@ -102,8 +102,7 @@ resources:
               Principal: "*"
               Action: s3:GetObject
               Resource: !Join ["", ["arn:aws:s3:::", !Ref FrontendBucket, "/*"]]
-
-``  Outputs:
+  Outputs:
     ApiUrl:
       Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
     S3WebsiteUrl:
