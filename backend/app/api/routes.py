@@ -13,7 +13,7 @@ from app.schemas.models import (
     ExecuteDrawRequest
 )
 from app.services.dynamodb import db_service
-from app.services.ses import ses_service
+from app.services.email_service import email_service
 from app.core.santa_draw import generate_secret_santa_draw
 
 router = APIRouter(prefix="/api/v1")
@@ -181,13 +181,13 @@ def execute_group_draw(group_id: str, payload: ExecuteDrawRequest):
     # Map Participant IDs to Objects
     part_map = {p["participant_id"]: p for p in participants}
 
-    # Dispatch individual emails via AWS SES
+    # Dispatch individual emails
     emails_sent = 0
     for giver_id, receiver_id in draw_results.items():
         giver = part_map[giver_id]
         receiver = part_map[receiver_id]
         
-        success = ses_service.send_secret_santa_notification(
+        success = email_service.send_secret_santa_notification(
             giver_email=giver["email"],
             giver_name=giver["name"],
             receiver_name=receiver["name"],
@@ -200,7 +200,7 @@ def execute_group_draw(group_id: str, payload: ExecuteDrawRequest):
     db_service.close_group(group_id)
 
     return {
-        "message": "Draw completed and emails dispatched successfully via AWS SES",
+        "message": "Draw completed and emails dispatched successfully",
         "total_participants": len(participants),
         "emails_sent": emails_sent
     }

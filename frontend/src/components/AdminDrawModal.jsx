@@ -36,7 +36,7 @@ export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess
         </div>
 
         <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '20px' }}>
-          Al realizar el sorteo, el grupo se cerrará de forma permanente y se enviarán automáticamente las asignaciones secretas por correo electrónico vía **AWS SES** a todos los integrantes.
+          Al realizar el sorteo, el grupo se cerrará de forma permanente y se enviarán automáticamente las asignaciones secretas por correo electrónico a todos los integrantes.
         </p>
 
         {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}

@@ -17,6 +17,11 @@ provider:
     GROUPS_TABLE: ${self:custom.groupsTableName}
     SES_SENDER_EMAIL: ${param:sender-email, opt:sender-email, 'notificaciones@tudominio.com'}
     STAGE: ${self:provider.stage}
+    SMTP_USER: ${param:smtp-user, env:SMTP_USER, ''}
+    SMTP_PASSWORD: ${param:smtp-password, env:SMTP_PASSWORD, ''}
+    SMTP_HOST: ${param:smtp-host, env:SMTP_HOST, 'smtp.gmail.com'}
+    SMTP_PORT: ${param:smtp-port, env:SMTP_PORT, '587'}
+    SMTP_FROM_NAME: ${param:smtp-from-name, env:SMTP_FROM_NAME, 'Santa Secreto 🎅'}
   iam:
     role:
       statements:

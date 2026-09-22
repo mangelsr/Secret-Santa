@@ -221,7 +221,7 @@ export default function App() {
                     </>
                   ) : (
                     <div style={{ padding: '12px 20px', background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: '12px', color: '#4ade80', fontSize: '0.95rem', fontWeight: '600' }}>
-                      ✅ El sorteo fue realizado y los correos han sido enviados vía AWS SES
+                      ✅ El sorteo fue realizado y los correos han sido enviados
                     </div>
                   )}
                 </div>
@@ -233,7 +233,7 @@ export default function App() {
               <div className="glass-card" style={{ padding: '24px', marginBottom: '32px', background: 'rgba(34,197,94,0.2)', border: '1px solid #22c55e' }}>
                 <h3 style={{ color: '#4ade80', fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>🎉 ¡Sorteo completado con éxito!</h3>
                 <p style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
-                  Se despacharon {drawSuccessInfo.emails_sent} de {drawSuccessInfo.total_participants} correos electrónicos individuales a través de AWS SES. Revisa tu bandeja de entrada.
+                  Se despacharon {drawSuccessInfo.emails_sent} de {drawSuccessInfo.total_participants} correos electrónicos individuales. Revisa tu bandeja de entrada.
                 </p>
               </div>
             )}

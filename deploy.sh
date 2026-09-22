@@ -54,12 +54,42 @@ STAGE="dev"
 REGION="us-east-1"
 SKIP_TESTS=false
 SENDER_EMAIL=""
+SMTP_USER=""
+SMTP_PASSWORD=""
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_FROM_NAME="Santa Secreto 🎅"
 
-# Attempt to load default SENDER_EMAIL from backend/.env if present
+# Attempt to load configuration from backend/.env if present
 if [ -f "$ROOT_DIR/backend/.env" ]; then
-    ENV_EMAIL=$(grep -E '^SES_SENDER_EMAIL=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+    ENV_EMAIL=$(grep -E '^SES_SENDER_EMAIL=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
     if [ -n "$ENV_EMAIL" ]; then
         SENDER_EMAIL="$ENV_EMAIL"
+    fi
+    
+    ENV_SMTP_USER=$(grep -E '^SMTP_USER=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_SMTP_USER" ]; then
+        SMTP_USER="$ENV_SMTP_USER"
+    fi
+
+    ENV_SMTP_PASS=$(grep -E '^SMTP_PASSWORD=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_SMTP_PASS" ]; then
+        SMTP_PASSWORD="$ENV_SMTP_PASS"
+    fi
+
+    ENV_SMTP_HOST=$(grep -E '^SMTP_HOST=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_SMTP_HOST" ]; then
+        SMTP_HOST="$ENV_SMTP_HOST"
+    fi
+
+    ENV_SMTP_PORT=$(grep -E '^SMTP_PORT=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_SMTP_PORT" ]; then
+        SMTP_PORT="$ENV_SMTP_PORT"
+    fi
+
+    ENV_SMTP_NAME=$(grep -E '^SMTP_FROM_NAME=' "$ROOT_DIR/backend/.env" | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$ENV_SMTP_NAME" ]; then
+        SMTP_FROM_NAME="$ENV_SMTP_NAME"
     fi
 fi
 
@@ -79,13 +109,15 @@ Options:
   -s, --stage STAGE          Deployment stage (default: "dev")
   -r, --region REGION        AWS region (default: "us-east-1")
   -e, --sender-email EMAIL   AWS SES verified sender email (default: "$SENDER_EMAIL")
+  --smtp-user USER           Gmail / SMTP username / email
+  --smtp-password PASS       Gmail App Password (16 chars)
   --skip-tests               Skip backend unit tests execution before deployment
   -h, --help                 Display this help message and exit
 
 Examples:
   ./deploy.sh
-  ./deploy.sh --stage prod --region us-west-2
-  ./deploy.sh --sender-email admin@mydomain.com --skip-tests
+  ./deploy.sh --stage prod --region us-east-1
+  ./deploy.sh --smtp-user mangelsr25@gmail.com --smtp-password "abcd efgh ijkl mnop"
 EOF
 }
 
@@ -102,6 +134,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         -e|--sender-email)
             SENDER_EMAIL="$2"
+            shift 2
+            ;;
+        --smtp-user)
+            SMTP_USER="$2"
+            shift 2
+            ;;
+        --smtp-password)
+            SMTP_PASSWORD="$2"
             shift 2
             ;;
         --skip-tests)
@@ -166,7 +206,11 @@ fi
 
 log_info "Deployment Stage: ${BOLD}${STAGE}${NC}"
 log_info "AWS Region: ${BOLD}${REGION}${NC}"
-log_info "SES Sender Email: ${BOLD}${SENDER_EMAIL}${NC}"
+if [ -n "$SMTP_USER" ]; then
+    log_info "Email Provider: ${BOLD}Gmail SMTP (${SMTP_USER})${NC}"
+else
+    log_info "Email Provider: ${BOLD}AWS SES (${SENDER_EMAIL})${NC}"
+fi
 
 log_step "2. Preparing & Testing Backend"
 cd "$ROOT_DIR/backend"
@@ -200,11 +244,13 @@ $PKG_MANAGER install
 log_step "3. Deploying Backend Stack to AWS via Serverless Framework"
 cd "$ROOT_DIR/backend"
 
-log_info "Executing 'npx serverless deploy --stage $STAGE --region $REGION --param=\"sender-email=$SENDER_EMAIL\"'..."
-npx serverless deploy \
-    --stage "$STAGE" \
-    --region "$REGION" \
-    --param="sender-email=$SENDER_EMAIL"
+DEPLOY_PARAMS="--stage $STAGE --region $REGION --param=\"sender-email=$SENDER_EMAIL\""
+if [ -n "$SMTP_USER" ]; then
+    DEPLOY_PARAMS="$DEPLOY_PARAMS --param=\"smtp-user=$SMTP_USER\" --param=\"smtp-password=$SMTP_PASSWORD\" --param=\"smtp-host=$SMTP_HOST\" --param=\"smtp-port=$SMTP_PORT\" --param=\"smtp-from-name=$SMTP_FROM_NAME\""
+fi
+
+log_info "Executing 'npx serverless deploy $DEPLOY_PARAMS'..."
+eval "npx serverless deploy $DEPLOY_PARAMS"
 
 log_step "4. Querying Deployed API Gateway URL & Building Frontend"
 STACK_NAME="santa-secreto-app-${STAGE}"
