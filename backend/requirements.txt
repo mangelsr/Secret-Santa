@@ -4,11 +4,11 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anyio==4.14.2
+anyio==4.15.1
     # via starlette
-boto3==1.43.69
+boto3==1.43.99
     # via santa-secreto-backend
-botocore==1.43.69
+botocore==1.43.99
     # via
     #   boto3
     #   s3transfer
@@ -18,7 +18,7 @@ email-validator==2.3.0
     # via pydantic
 fastapi==0.141.1
     # via santa-secreto-backend
-idna==3.18
+idna==3.20
     # via
     #   anyio
     #   email-validator
@@ -26,13 +26,13 @@ jmespath==1.1.0
     # via
     #   boto3
     #   botocore
-mangum==0.21.0
+mangum==0.22.0
     # via santa-secreto-backend
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   fastapi
     #   santa-secreto-backend
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via pydantic
 python-dateutil==2.9.0.post0
     # via botocore
@@ -44,14 +44,15 @@ starlette==1.6.0
     # via fastapi
 typing-extensions==4.16.0
     # via
+    #   anyio
     #   fastapi
     #   mangum
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.3
+typing-inspection==0.4.4
     # via
     #   fastapi
     #   pydantic
-urllib3==2.7.0
+urllib3==2.8.0
     # via botocore
