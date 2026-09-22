@@ -241,9 +241,12 @@ cd "$ROOT_DIR/backend"
 log_info "Uploading frontend SPA bundle to S3 website bucket..."
 npx serverless s3sync
 
+FRONTEND_URL="http://santa-secreto-frontend-${STAGE}.s3-website-${REGION}.amazonaws.com"
+
 log_step "6. Deployment Complete! 🎄✨"
 log_success "Successfully deployed Secret Santa full-stack application!"
 log_info "Stage: $STAGE"
 log_info "Region: $REGION"
 log_info "SES Sender Email: $SENDER_EMAIL"
+log_info "Frontend SPA URL: ${BOLD}${FRONTEND_URL}${NC}"
 log_info "API Gateway Endpoint: ${BOLD}${API_ENDPOINT}${NC}"

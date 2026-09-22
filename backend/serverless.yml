@@ -103,8 +103,8 @@ resources:
               Action: s3:GetObject
               Resource: !Join ["", ["arn:aws:s3:::", !Ref FrontendBucket, "/*"]]
 
-outputs:
-  ApiUrl:
-    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
-  S3WebsiteUrl:
-    Value: !GetAtt FrontendBucket.WebsiteURL
+``  Outputs:
+    ApiUrl:
+      Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    S3WebsiteUrl:
+      Value: !GetAtt FrontendBucket.WebsiteURL
