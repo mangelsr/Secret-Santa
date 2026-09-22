@@ -282,17 +282,30 @@ else
     exit 1
 fi
 
-log_step "5. Synchronizing Frontend Assets to AWS S3"
+log_step "5. Synchronizing Frontend Assets to AWS S3 & Invalidating CloudFront"
 cd "$ROOT_DIR/backend"
 log_info "Uploading frontend SPA bundle to S3 website bucket..."
 npx serverless s3sync
 
-FRONTEND_URL="http://santa-secreto-frontend-${STAGE}.s3-website-${REGION}.amazonaws.com"
+# Retrieve CloudFront outputs from CloudFormation
+CF_DIST_ID=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text 2>/dev/null || echo "")
+CF_URL=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontUrl'].OutputValue" --output text 2>/dev/null || echo "")
+
+if [ -n "$CF_DIST_ID" ] && [ "$CF_DIST_ID" != "None" ]; then
+    log_info "Invalidating CloudFront CDN cache (Distribution: ${CF_DIST_ID})..."
+    aws cloudfront create-invalidation --distribution-id "$CF_DIST_ID" --paths "/*" >/dev/null 2>&1 && log_success "CloudFront cache invalidated successfully." || log_warning "Could not create CloudFront invalidation."
+fi
+
+if [ -n "$CF_URL" ] && [ "$CF_URL" != "None" ]; then
+    FRONTEND_URL="$CF_URL"
+else
+    FRONTEND_URL="http://santa-secreto-frontend-${STAGE}.s3-website-${REGION}.amazonaws.com"
+fi
 
 log_step "6. Deployment Complete! 🎄✨"
 log_success "Successfully deployed Secret Santa full-stack application!"
 log_info "Stage: $STAGE"
 log_info "Region: $REGION"
 log_info "SES Sender Email: $SENDER_EMAIL"
-log_info "Frontend SPA URL: ${BOLD}${FRONTEND_URL}${NC}"
+log_info "Frontend SPA URL (HTTPS): ${BOLD}${FRONTEND_URL}${NC}"
 log_info "API Gateway Endpoint: ${BOLD}${API_ENDPOINT}${NC}"
