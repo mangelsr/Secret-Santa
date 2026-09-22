@@ -49,6 +49,27 @@ export async function registerParticipant(groupId, name, email, excludedParticip
 }
 
 /**
+ * Updates an existing participant's name, email, or exclusions.
+ */
+export async function updateParticipant(groupId, participantId, name, email, excludedParticipantIds) {
+  const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants/${participantId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      email,
+      excluded_participant_ids: excludedParticipantIds
+    })
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.detail || 'Error al actualizar participante');
+  }
+  return await response.json();
+}
+
+
+/**
  * Triggers the Secret Santa draw and dispatches email notifications via AWS SES.
  */
 export async function executeDraw(groupId, adminPasscode) {
@@ -68,11 +89,13 @@ export async function executeDraw(groupId, adminPasscode) {
  * Removes a participant from an open group (Admin action).
  */
 export async function removeParticipant(groupId, participantId, adminPasscode) {
+  const headers = {};
+  if (adminPasscode) {
+    headers['X-Admin-Passcode'] = adminPasscode;
+  }
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants/${participantId}`, {
     method: 'DELETE',
-    headers: {
-      'X-Admin-Passcode': adminPasscode
-    }
+    headers
   });
   if (!response.ok) {
     const err = await response.json();

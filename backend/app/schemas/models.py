@@ -21,6 +21,14 @@ class RegisterParticipantRequest(BaseModel):
         description="IDs or names of family members previously gifted to in past years"
     )
 
+class UpdateParticipantRequest(BaseModel):
+    name: str = Field(..., description="Participant full name")
+    email: EmailStr = Field(..., description="Participant email address to receive secret assignment")
+    excluded_participant_ids: List[str] = Field(
+        default_factory=list, 
+        description="IDs or names of family members previously gifted to in past years"
+    )
+
 class ParticipantPublicResponse(BaseModel):
     participant_id: str
     group_id: str

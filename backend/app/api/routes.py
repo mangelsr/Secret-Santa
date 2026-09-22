@@ -7,6 +7,7 @@ from app.schemas.models import (
     CreateGroupRequest, 
     GroupPublicResponse, 
     RegisterParticipantRequest, 
+    UpdateParticipantRequest,
     ParticipantPublicResponse,
     GroupWithParticipantsResponse,
     ExecuteDrawRequest
@@ -100,13 +101,51 @@ def register_participant(group_id: str, payload: RegisterParticipantRequest):
         created_at=item["created_at"]
     )
 
+@router.put("/groups/{group_id}/participants/{participant_id}", response_model=ParticipantPublicResponse)
+def update_participant(group_id: str, participant_id: str, payload: UpdateParticipantRequest):
+    group = db_service.get_group(group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    if group["status"] != "OPEN":
+        raise HTTPException(status_code=400, detail="Cannot modify members in a closed group")
+
+    existing_participants = db_service.get_participants(group_id)
+    current_participant = next((p for p in existing_participants if p["participant_id"] == participant_id), None)
+    if not current_participant:
+        raise HTTPException(status_code=404, detail="Participant not found")
+
+    # Check if email is already registered to another member in this group
+    if any(p["email"].lower() == payload.email.lower() and p["participant_id"] != participant_id for p in existing_participants):
+        raise HTTPException(status_code=400, detail="This email address is already registered to another member in this group")
+
+    # Filter out self-exclusion if present
+    cleaned_exclusions = [e_id for e_id in payload.excluded_participant_ids if e_id != participant_id]
+
+    db_service.update_participant(
+        group_id=group_id,
+        participant_id=participant_id,
+        name=payload.name,
+        email=payload.email,
+        excluded_participant_ids=cleaned_exclusions
+    )
+
+    return ParticipantPublicResponse(
+        participant_id=participant_id,
+        group_id=group_id,
+        name=payload.name,
+        email=payload.email,
+        excluded_participant_ids=cleaned_exclusions,
+        created_at=current_participant.get("created_at", "")
+    )
+
 @router.delete("/groups/{group_id}/participants/{participant_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_participant(group_id: str, participant_id: str, x_admin_passcode: Optional[str] = Header(None)):
     group = db_service.get_group(group_id)
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
         
-    if group["admin_passcode"] != x_admin_passcode:
+    if x_admin_passcode and group["admin_passcode"] != x_admin_passcode:
         raise HTTPException(status_code=401, detail="Incorrect admin passcode")
         
     if group["status"] != "OPEN":

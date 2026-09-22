@@ -54,6 +54,27 @@ class DynamoDBService:
         )
         return response.get("Items", [])
 
+    def update_participant(self, group_id: str, participant_id: str, name: str, email: str, excluded_participant_ids: List[str]) -> Dict[str, Any]:
+        response = self.table.update_item(
+            Key={
+                "PK": f"GROUP#{group_id}",
+                "SK": f"PARTICIPANT#{participant_id}"
+            },
+            UpdateExpression="SET #n = :name, #e = :email, #ex = :excluded_participant_ids",
+            ExpressionAttributeNames={
+                "#n": "name",
+                "#e": "email",
+                "#ex": "excluded_participant_ids"
+            },
+            ExpressionAttributeValues={
+                ":name": name,
+                ":email": email,
+                ":excluded_participant_ids": excluded_participant_ids
+            },
+            ReturnValues="ALL_NEW"
+        )
+        return response.get("Attributes", {})
+
     def delete_participant(self, group_id: str, participant_id: str):
         self.table.delete_item(
             Key={

@@ -2,22 +2,43 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import CreateGroupModal from './components/CreateGroupModal';
 import RegisterModal from './components/RegisterModal';
+import EditParticipantModal from './components/EditParticipantModal';
+import DeleteParticipantModal from './components/DeleteParticipantModal';
 import AdminDrawModal from './components/AdminDrawModal';
 import { getGroupDetails } from './services/api';
 
 /**
- * Main application component managing active group view and modals.
+ * Main application component managing active group view, participant cards, and modals.
  */
 export default function App() {
   const [groupId, setGroupId] = useState('');
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState('');
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAdminDrawOpen, setIsAdminDrawOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingParticipant, setEditingParticipant] = useState(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deletingParticipant, setDeletingParticipant] = useState(null);
   const [drawSuccessInfo, setDrawSuccessInfo] = useState(null);
+
+  const loadGroup = async (id) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getGroupDetails(id);
+      setGroup(data);
+    } catch (err) {
+      setError(err.message);
+      setGroup(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Parse Group ID from URL Hash or Query Parameters
   useEffect(() => {
@@ -37,24 +58,19 @@ export default function App() {
     }
   }, []);
 
-  const loadGroup = async (id) => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await getGroupDetails(id);
-      setGroup(data);
-    } catch (err) {
-      setError(err.message);
-      setGroup(null);
-    } finally {
-      setLoading(false);
+  // Auto-hide temporary notifications
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(''), 4000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [notification]);
 
   const handleGroupCreated = (newGroup) => {
     setGroup(newGroup);
     setGroupId(newGroup.group_id);
     window.location.hash = newGroup.group_id;
+    setNotification('¡Grupo creado exitosamente! Comparte el enlace con tu familia.');
   };
 
   const handleDrawSuccess = (result) => {
@@ -62,11 +78,68 @@ export default function App() {
     loadGroup(groupId);
   };
 
+  const handleEditClick = (participant) => {
+    setEditingParticipant(participant);
+    setIsEditOpen(true);
+  };
+
+  const handleDeleteClick = (participant) => {
+    setDeletingParticipant(participant);
+    setIsDeleteOpen(true);
+  };
+
+  const handleParticipantUpdated = () => {
+    loadGroup(group.group_id);
+    setNotification('¡Datos del participante actualizados correctamente! ✨');
+  };
+
+  const handleParticipantDeleted = (deletedParticipant) => {
+    loadGroup(group.group_id);
+    setNotification(`Miembro "${deletedParticipant.name}" eliminado del grupo.`);
+  };
+
+  const handleParticipantRegistered = () => {
+    loadGroup(group.group_id);
+    setNotification('¡Inscripción confirmada con éxito! 🎁');
+  };
+
+  // Helper to resolve exclusion participant IDs to their names
+  const getExcludedParticipantNames = (excludedIds) => {
+    if (!excludedIds || excludedIds.length === 0 || !group?.participants) return [];
+    const participantMap = new Map(group.participants.map((p) => [p.participant_id, p.name]));
+    return excludedIds.map((id) => participantMap.get(id) || id);
+  };
+
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '60px' }}>
       <Navbar onCreateClick={() => setIsCreateOpen(true)} currentGroup={group} />
 
       <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
+        {/* Toast Notification */}
+        {notification && (
+          <div 
+            className="glass-card glow-gold" 
+            style={{ 
+              padding: '14px 20px', 
+              margin: '20px 0', 
+              background: 'rgba(34, 197, 94, 0.25)', 
+              border: '1px solid #22c55e',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              animation: 'modalIn 0.25s ease'
+            }}
+          >
+            <span style={{ fontWeight: '600', color: '#4ade80' }}>{notification}</span>
+            <button 
+              onClick={() => setNotification('')} 
+              style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', fontSize: '1.2rem' }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Landing Section / Group Lookup */}
         {!group && !loading && (
           <div className="glass-card" style={{ padding: '48px 32px', textAlign: 'center', margin: '40px 0' }}>
@@ -136,7 +209,7 @@ export default function App() {
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   {group.status === 'OPEN' ? (
                     <>
                       <button className="btn-festive" onClick={() => setIsRegisterOpen(true)}>
@@ -167,7 +240,7 @@ export default function App() {
 
             {/* Registered Participants Grid */}
             <div className="glass-card" style={{ padding: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: '700' }}>
                   👥 Miembros Inscritos ({group.participants?.length || 0})
                 </h3>
@@ -180,24 +253,84 @@ export default function App() {
                   <button className="btn-festive" onClick={() => setIsRegisterOpen(true)}>Sé el primero en inscribirte</button>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                  {group.participants.map((p) => (
-                    <div key={p.participant_id} className="glass-card" style={{ padding: '20px', background: 'rgba(15,23,42,0.5)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                        <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(135deg, #ef4444, #f59e0b)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                          {p.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h4 style={{ fontWeight: '700', fontSize: '1.05rem' }}>{p.name}</h4>
-                          <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{p.email}</p>
-                        </div>
-                      </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
+                  {group.participants.map((p) => {
+                    const excludedNames = getExcludedParticipantNames(p.excluded_participant_ids);
 
-                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        🚫 {p.excluded_participant_ids?.length || 0} Exclusiones registradas
+                    return (
+                      <div key={p.participant_id} className="member-card">
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                              <div style={{ 
+                                width: '44px', 
+                                height: '44px', 
+                                minWidth: '44px',
+                                borderRadius: '50%', 
+                                background: 'linear-gradient(135deg, #ef4444, #f59e0b)', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                fontWeight: 'bold', 
+                                fontSize: '1.25rem',
+                                color: '#ffffff',
+                                boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)'
+                              }}>
+                                {p.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div style={{ minWidth: 0 }}>
+                                <h4 style={{ fontWeight: '700', fontSize: '1.05rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {p.name}
+                                </h4>
+                                <p style={{ fontSize: '0.8rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {p.email}
+                                </p>
+                              </div>
+                            </div>
+
+                            {group.status === 'OPEN' && (
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <button 
+                                  className="btn-card-edit" 
+                                  onClick={() => handleEditClick(p)}
+                                  title="Editar datos y exclusiones"
+                                >
+                                  ✏️ Editar
+                                </button>
+                                <button 
+                                  className="btn-card-delete" 
+                                  onClick={() => handleDeleteClick(p)}
+                                  title={`Eliminar a ${p.name}`}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Exclusions info */}
+                          <div style={{ fontSize: '0.82rem', color: '#cbd5e1', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: excludedNames.length > 0 ? '6px' : '0' }}>
+                              <span>🚫</span>
+                              <span style={{ fontWeight: '600' }}>
+                                {excludedNames.length === 0 ? 'Sin exclusiones' : `${excludedNames.length} Exclusión${excludedNames.length > 1 ? 'es' : ''}:`}
+                              </span>
+                            </div>
+
+                            {excludedNames.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                                {excludedNames.map((exName, idx) => (
+                                  <span key={idx} className="exclusion-chip">
+                                    {exName}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -219,7 +352,30 @@ export default function App() {
             onClose={() => setIsRegisterOpen(false)} 
             groupId={group.group_id} 
             existingParticipants={group.participants || []} 
-            onParticipantRegistered={() => loadGroup(group.group_id)} 
+            onParticipantRegistered={handleParticipantRegistered} 
+          />
+
+          <EditParticipantModal
+            isOpen={isEditOpen}
+            onClose={() => {
+              setIsEditOpen(false);
+              setEditingParticipant(null);
+            }}
+            groupId={group.group_id}
+            participant={editingParticipant}
+            allParticipants={group.participants || []}
+            onParticipantUpdated={handleParticipantUpdated}
+          />
+
+          <DeleteParticipantModal
+            isOpen={isDeleteOpen}
+            onClose={() => {
+              setIsDeleteOpen(false);
+              setDeletingParticipant(null);
+            }}
+            groupId={group.group_id}
+            participant={deletingParticipant}
+            onParticipantDeleted={handleParticipantDeleted}
           />
 
           <AdminDrawModal 
