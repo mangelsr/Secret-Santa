@@ -1,6 +1,6 @@
 service: santa-secreto-app
 
-frameworkVersion: "3"
+frameworkVersion: "4"
 
 provider:
   name: aws
@@ -41,17 +41,9 @@ provider:
             - ses:SendRawEmail
           Resource: "*"
 
-plugins:
-  - serverless-s3-sync
-
 custom:
   groupsTableName: santa-secreto-groups-${self:provider.stage}
   frontendBucketName: santa-secreto-frontend-${self:provider.stage}
-
-  s3Sync:
-    - bucketName: ${self:custom.frontendBucketName}
-      localDir: ../frontend/dist
-      deleteRemoved: true
 
 functions:
   api:

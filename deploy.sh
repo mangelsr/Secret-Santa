@@ -162,11 +162,16 @@ done
 
 log_step "1. Checking Deployment Prerequisites"
 
-# Check Node.js
+# Check Node.js (osls@4 requires ^20.19.0 || ^22.13.0 || >=24)
 if command -v node >/dev/null 2>&1; then
-    log_info "Node.js detected: $(node --version)"
+    NODE_VER=$(node --version)
+    log_info "Node.js detected: $NODE_VER"
+    if ! node -e 'const [M,m]=process.versions.node.split(".").map(Number); if (!((M===20&&m>=19)||(M===22&&m>=13)||M>=24)) process.exit(1);'; then
+        log_error "osls@4 requires Node.js ^20.19.0, ^22.13.0, or >=24 (detected $NODE_VER)."
+        exit 1
+    fi
 else
-    log_error "Node.js is not installed. Please install Node.js (v18+) to continue."
+    log_error "Node.js is not installed. Please install Node.js (^20.19.0, ^22.13.0, or >=24) to continue."
     exit 1
 fi
 
@@ -183,7 +188,7 @@ else
     exit 1
 fi
 
-# Check AWS CLI
+# Check AWS CLI (required for S3 sync, CloudFormation outputs, and CloudFront invalidation)
 if command -v aws >/dev/null 2>&1; then
     log_info "AWS CLI detected: $(aws --version | head -n1)"
     if aws sts get-caller-identity >/dev/null 2>&1; then
@@ -193,7 +198,8 @@ if command -v aws >/dev/null 2>&1; then
         log_warning "AWS CLI is installed, but valid credentials were not found. Ensure 'aws configure' or AWS env variables are set."
     fi
 else
-    log_warning "AWS CLI is not installed. Ensure credentials are available to Serverless Framework via environment variables."
+    log_error "AWS CLI is not installed. Please install and configure AWS CLI to continue."
+    exit 1
 fi
 
 # Check Docker
@@ -238,10 +244,10 @@ else
     log_warning "Skipping backend unit tests (--skip-tests specified)."
 fi
 
-log_info "Installing Serverless Framework plugins in backend..."
+log_info "Installing Open Serverless (osls) dependencies in backend..."
 $PKG_MANAGER install
 
-log_step "3. Deploying Backend Stack to AWS via Serverless Framework"
+log_step "3. Deploying Backend Stack to AWS via Open Serverless (osls)"
 cd "$ROOT_DIR/backend"
 
 DEPLOY_PARAMS="--stage $STAGE --region $REGION --param=\"sender-email=$SENDER_EMAIL\""
@@ -249,8 +255,14 @@ if [ -n "$SMTP_USER" ]; then
     DEPLOY_PARAMS="$DEPLOY_PARAMS --param=\"smtp-user=$SMTP_USER\" --param=\"smtp-password=$SMTP_PASSWORD\" --param=\"smtp-host=$SMTP_HOST\" --param=\"smtp-port=$SMTP_PORT\" --param=\"smtp-from-name=$SMTP_FROM_NAME\""
 fi
 
-log_info "Executing 'npx serverless deploy $DEPLOY_PARAMS'..."
-eval "npx serverless deploy $DEPLOY_PARAMS"
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    OSLS_CMD="pnpm exec osls"
+else
+    OSLS_CMD="npx osls"
+fi
+
+log_info "Executing '$OSLS_CMD deploy $DEPLOY_PARAMS'..."
+eval "$OSLS_CMD deploy $DEPLOY_PARAMS"
 
 log_step "4. Querying Deployed API Gateway URL & Building Frontend"
 STACK_NAME="santa-secreto-app-${STAGE}"
@@ -283,9 +295,10 @@ else
 fi
 
 log_step "5. Synchronizing Frontend Assets to AWS S3 & Invalidating CloudFront"
+FRONTEND_BUCKET="santa-secreto-frontend-${STAGE}"
+log_info "Uploading frontend SPA bundle to s3://${FRONTEND_BUCKET}..."
+aws s3 sync "$ROOT_DIR/frontend/dist" "s3://${FRONTEND_BUCKET}" --delete --region "$REGION"
 cd "$ROOT_DIR/backend"
-log_info "Uploading frontend SPA bundle to S3 website bucket..."
-npx serverless s3sync
 
 # Retrieve CloudFront outputs from CloudFormation
 CF_DIST_ID=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text 2>/dev/null || echo "")

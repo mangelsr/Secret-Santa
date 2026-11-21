@@ -25,7 +25,7 @@ A serverless web application to organize **Secret Santa** gift exchanges for Chr
 
 * **Frontend:** React, Vite, `pnpm`, CSS3 with Glassmorphic aesthetic and responsive layout.
 * **Backend:** FastAPI, Mangum (ASGI adapter), Python 3.14, Pydantic, Boto3.
-* **Infrastructure as Code (IaC):** Serverless Framework v3 (`serverless.yml`).
+* **Infrastructure as Code (IaC):** Open Serverless (`osls` v4, `serverless.yml`).
 * **AWS Services:** AWS Lambda, AWS API Gateway, AWS DynamoDB, AWS S3, AWS SES.
 * **CDN & DNS:** Cloudflare CDN with HTTPS proxy and SPA fallback routing.
 
@@ -35,7 +35,7 @@ A serverless web application to organize **Secret Santa** gift exchanges for Chr
 
 ```
 secret-santa/
-├── backend/            # FastAPI, DynamoDB, SES & Serverless Framework v3
+├── backend/            # FastAPI, DynamoDB, SES & Open Serverless (osls v4)
 │   ├── app/            # Source code for API and draw engine
 │   ├── tests/          # Unit tests for exclusion constraints
 │   ├── serverless.yml  # AWS Infrastructure orchestration
@@ -55,7 +55,7 @@ secret-santa/
 
 ### Prerequisites
 
-* Node.js v18+ and `pnpm` installed (`npm i -g pnpm`).
+* Node.js v20.19+ (or v22.13+ / v24+) and `pnpm` installed (`npm i -g pnpm`).
 * Python 3.14+ and `uv` package manager installed.
 * AWS CLI configured (`aws configure`).
 
@@ -86,9 +86,12 @@ pnpm run build
 ```bash
 cd ../backend
 uv sync
-npm install
+pnpm install
 uv run pytest
 
 # Deploy full stack to AWS
-npx serverless deploy --stage dev --param="sender-email=notifications@yourdomain.com"
+pnpm exec osls deploy --stage dev --param="sender-email=notifications@yourdomain.com"
+
+# Sync built frontend to S3
+aws s3 sync ../frontend/dist s3://santa-secreto-frontend-dev --delete --region us-east-1
 ```

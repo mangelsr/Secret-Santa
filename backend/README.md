@@ -1,6 +1,6 @@
 # Secret Santa Backend 🐍⚙️
 
-Serverless Backend written in **FastAPI** and packaged for **AWS Lambda** using **Mangum** and **Serverless Framework v3**.
+Serverless Backend written in **FastAPI** and packaged for **AWS Lambda** using **Mangum** and **Open Serverless (`osls` v4)**.
 
 ---
 
@@ -10,7 +10,7 @@ Serverless Backend written in **FastAPI** and packaged for **AWS Lambda** using 
 * **Mangum:** ASGI adapter to run FastAPI inside AWS Lambda.
 * **Boto3:** AWS SDK for **DynamoDB** operations and transactional emails via **AWS SES**.
 * **Pydantic:** Data validation and settings management using Python type annotations.
-* **Serverless Framework v3:** Infrastructure as Code definition (`serverless.yml`).
+* **Open Serverless (`osls` v4):** Infrastructure as Code definition (`serverless.yml`).
 
 ---
 
@@ -58,6 +58,6 @@ uv run pytest
 ## 🚀 AWS Deployment
 
 ```bash
-npm install
-npx serverless deploy --stage dev
+pnpm install
+pnpm exec osls deploy --stage dev
 ```
