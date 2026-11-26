@@ -8,9 +8,9 @@ anyio==4.16.0
     # via
     #   fastapi
     #   starlette
-boto3==1.44.9
+boto3==1.44.12
     # via santa-secreto-backend
-botocore==1.44.9
+botocore==1.44.12
     # via
     #   boto3
     #   s3transfer
