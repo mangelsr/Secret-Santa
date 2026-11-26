@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import List
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import List, Optional
 
 class CreateGroupRequest(BaseModel):
     name: str = Field(..., description="Group name (e.g. Garcia Family Christmas 2026)")
@@ -20,6 +20,18 @@ class RegisterParticipantRequest(BaseModel):
         default_factory=list, 
         description="IDs or names of family members previously gifted to in past years"
     )
+    edit_passcode: Optional[str] = Field(
+        default=None,
+        min_length=4,
+        description="Optional personal PIN (min 4 characters) allowing the participant to edit their details later"
+    )
+
+    @field_validator("edit_passcode", mode="before")
+    @classmethod
+    def empty_passcode_to_none(cls, value: Optional[str]) -> Optional[str]:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 class UpdateParticipantRequest(BaseModel):
     name: str = Field(..., description="Participant full name")

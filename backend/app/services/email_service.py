@@ -1,4 +1,5 @@
 import smtplib
+import threading
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -9,11 +10,14 @@ from app.core.config import settings
 class EmailService:
     def __init__(self):
         self._ses_client = None
+        self._ses_lock = threading.Lock()
 
     @property
     def ses_client(self):
         if self._ses_client is None:
-            self._ses_client = boto3.client('ses', region_name=settings.AWS_REGION)
+            with self._ses_lock:
+                if self._ses_client is None:
+                    self._ses_client = boto3.client('ses', region_name=settings.AWS_REGION)
         return self._ses_client
 
     def send_secret_santa_notification(
@@ -88,11 +92,11 @@ class EmailService:
             
             # Gmail App Password often works on port 587 (STARTTLS) or port 465 (SSL)
             if settings.SMTP_PORT == 465:
-                with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                     server.sendmail(settings.SMTP_USER, [to_email], msg.as_string())
             else:
-                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
                     server.ehlo()
                     server.starttls()
                     server.ehlo()

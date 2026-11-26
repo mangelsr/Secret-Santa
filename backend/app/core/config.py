@@ -14,4 +14,8 @@ class Settings:
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_FROM_NAME: str = os.getenv("SMTP_FROM_NAME", "Santa Secreto 🎅")
 
+    # Passcode Brute-Force Protection
+    MAX_PASSCODE_ATTEMPTS: int = int(os.getenv("MAX_PASSCODE_ATTEMPTS", "5"))
+    PASSCODE_LOCKOUT_SECONDS: int = int(os.getenv("PASSCODE_LOCKOUT_SECONDS", "900"))
+
 settings = Settings()

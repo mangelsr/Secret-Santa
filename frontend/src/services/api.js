@@ -29,17 +29,22 @@ export async function getGroupDetails(groupId) {
 }
 
 /**
- * Registers a new participant specifying historical gift exclusions.
+ * Registers a new participant specifying historical gift exclusions and optional personal edit PIN.
  */
-export async function registerParticipant(groupId, name, email, excludedParticipantIds) {
+export async function registerParticipant(groupId, name, email, excludedParticipantIds, editPasscode = '') {
+  const payload = {
+    name,
+    email,
+    excluded_participant_ids: excludedParticipantIds
+  };
+  if (editPasscode && editPasscode.trim()) {
+    payload.edit_passcode = editPasscode.trim();
+  }
+
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      email,
-      excluded_participant_ids: excludedParticipantIds
-    })
+    body: JSON.stringify(payload)
   });
   if (!response.ok) {
     const err = await response.json();
@@ -49,12 +54,16 @@ export async function registerParticipant(groupId, name, email, excludedParticip
 }
 
 /**
- * Updates an existing participant's name, email, or exclusions.
+ * Updates an existing participant's name, email, or exclusions (requires Admin Passcode or personal edit PIN).
  */
-export async function updateParticipant(groupId, participantId, name, email, excludedParticipantIds) {
+export async function updateParticipant(groupId, participantId, name, email, excludedParticipantIds, passcode) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (passcode) {
+    headers['X-Admin-Passcode'] = passcode;
+  }
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/participants/${participantId}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
       name,
       email,

@@ -11,16 +11,25 @@ export default function DeleteParticipantModal({
   participant,
   onParticipantDeleted
 }) {
+  const [adminPasscode, setAdminPasscode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen || !participant) return null;
 
-  const handleConfirmDelete = async () => {
+  const handleClose = () => {
+    setAdminPasscode('');
+    setError('');
+    onClose();
+  };
+
+  const handleConfirmDelete = async (e) => {
+    e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await removeParticipant(groupId, participant.participant_id);
+      await removeParticipant(groupId, participant.participant_id, adminPasscode);
+      setAdminPasscode('');
       onParticipantDeleted(participant);
       onClose();
     } catch (err) {
@@ -31,7 +40,7 @@ export default function DeleteParticipantModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div 
         className="modal-content glass-card glow-red" 
         style={{ padding: '32px', maxWidth: '480px' }} 
@@ -88,28 +97,41 @@ export default function DeleteParticipantModal({
           </p>
         </div>
 
-        <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '24px', lineHeight: '1.5' }}>
+        <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '20px', lineHeight: '1.5' }}>
           El integrante será removido de la lista y no formará parte del sorteo de regalos.
         </p>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <button 
-            type="button" 
-            className="btn-secondary" 
-            onClick={onClose} 
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-          <button 
-            type="button" 
-            className="btn-danger" 
-            onClick={handleConfirmDelete} 
-            disabled={loading}
-          >
-            {loading ? 'Eliminando...' : '🗑️ Sí, Eliminar Miembro'}
-          </button>
-        </div>
+        <form onSubmit={handleConfirmDelete}>
+          <div className="form-group">
+            <label className="form-label">Clave de Administrador (PIN)</label>
+            <input
+              type="password"
+              className="form-input"
+              placeholder="Ingresa la clave del organizador para confirmar"
+              value={adminPasscode}
+              onChange={(e) => setAdminPasscode(e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={handleClose} 
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              className="btn-danger" 
+              disabled={loading}
+            >
+              {loading ? 'Eliminando...' : '🗑️ Sí, Eliminar Miembro'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

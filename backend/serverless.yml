@@ -7,7 +7,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   memorySize: 512
-  timeout: 15
+  timeout: 30
   ecr:
     images:
       appimage:
@@ -33,6 +33,7 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
+            - dynamodb:ConditionCheckItem
           Resource:
             - !GetAtt GroupsTable.Arn
         - Effect: Allow

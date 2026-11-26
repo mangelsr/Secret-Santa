@@ -2,14 +2,22 @@ import React, { useState } from 'react';
 import { executeDraw } from '../services/api';
 
 /**
- * Modal component for organizer confirmation and Secret Santa draw execution.
+ * Modal component for organizer confirmation and Secret Santa draw execution (or retry of failed emails).
  */
-export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess }) {
+export default function AdminDrawModal({ isOpen, onClose, groupId, groupStatus, onDrawSuccess }) {
   const [adminPasscode, setAdminPasscode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
+
+  const isRetry = groupStatus === 'DRAW_PARTIAL';
+
+  const handleClose = () => {
+    setAdminPasscode('');
+    setError('');
+    onClose();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +26,7 @@ export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess
 
     try {
       const result = await executeDraw(groupId, adminPasscode);
+      setAdminPasscode('');
       onDrawSuccess(result);
       onClose();
     } catch (err) {
@@ -28,15 +37,19 @@ export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content glass-card glow-gold" style={{ padding: '32px' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '700' }}>🎲 Realizar Sorteo Final</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '700' }}>
+            {isRetry ? '🔁 Reintentar Envío de Correos' : '🎲 Realizar Sorteo Final'}
+          </h2>
+          <button onClick={handleClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
         </div>
 
         <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '20px' }}>
-          Al realizar el sorteo, el grupo se cerrará de forma permanente y se enviarán automáticamente las asignaciones secretas por correo electrónico a todos los integrantes.
+          {isRetry
+            ? 'El sorteo ya quedó guardado de forma segura sin cambios en las parejas. Se reintentará únicamente el envío de los correos que fallaron anteriormente.'
+            : 'Al realizar el sorteo, el grupo se cerrará de forma permanente y se enviarán automáticamente las asignaciones secretas por correo electrónico a todos los integrantes.'}
         </p>
 
         {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
@@ -55,9 +68,11 @@ export default function AdminDrawModal({ isOpen, onClose, groupId, onDrawSuccess
           </div>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '28px' }}>
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn-secondary" onClick={handleClose}>Cancelar</button>
             <button type="submit" className="btn-gold" disabled={loading}>
-              {loading ? 'Ejecutando Sorteo...' : '🚀 Cerrar Grupo y Enviar Correos'}
+              {loading
+                ? (isRetry ? 'Reintentando...' : 'Ejecutando Sorteo...')
+                : (isRetry ? '🔁 Reintentar Correos Pendientes' : '🚀 Cerrar Grupo y Enviar Correos')}
             </button>
           </div>
         </form>

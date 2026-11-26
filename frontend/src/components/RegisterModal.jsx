@@ -7,6 +7,7 @@ import { registerParticipant } from '../services/api';
 export default function RegisterModal({ isOpen, onClose, groupId, existingParticipants, onParticipantRegistered }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [editPasscode, setEditPasscode] = useState('');
   const [selectedExclusions, setSelectedExclusions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,9 +28,10 @@ export default function RegisterModal({ isOpen, onClose, groupId, existingPartic
     setLoading(true);
 
     try {
-      await registerParticipant(groupId, name, email, selectedExclusions);
+      await registerParticipant(groupId, name, email, selectedExclusions, editPasscode);
       setName('');
       setEmail('');
+      setEditPasscode('');
       setSelectedExclusions([]);
       onParticipantRegistered();
       onClose();
@@ -72,6 +74,23 @@ export default function RegisterModal({ isOpen, onClose, groupId, existingPartic
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              PIN Personal de Edición (opcional)
+              <span style={{ display: 'block', fontWeight: '400', fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
+                Mínimo 4 caracteres. Te permitirá editar tus datos o exclusiones después sin pedir la clave al organizador.
+              </span>
+            </label>
+            <input 
+              type="password" 
+              className="form-input" 
+              placeholder="Ej: 1234 (opcional)" 
+              minLength={4}
+              value={editPasscode} 
+              onChange={(e) => setEditPasscode(e.target.value)} 
             />
           </div>
 

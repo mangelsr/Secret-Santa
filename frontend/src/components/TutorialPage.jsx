@@ -39,7 +39,7 @@ const FAQS = [
   {
     question: 'Fui el primero en registrarme y no aparecía nadie para excluir, ¿qué hago?',
     answer:
-      '¡Es normal! Regístrate normalmente primero. Una vez que los demás participantes se vayan inscribiendo en el grupo, busca tu tarjeta y haz clic en "✏️ Editar" para agregar tus exclusiones antes de que el organizador cierre el grupo.',
+      '¡Es normal! Regístrate normalmente primero y define un PIN personal opcional. Una vez que los demás participantes se vayan inscribiendo en el grupo, busca tu tarjeta y haz clic en "✏️ Editar" usando tu PIN personal (o la clave del organizador) para agregar tus exclusiones antes de que se cierre el grupo.',
   },
   {
     question: '¿Cuántos participantes se necesitan como mínimo para el sorteo?',
@@ -251,7 +251,7 @@ export default function TutorialPage({ onBackHome, onBackToGroup, onCreateClick,
                   Completa tu inscripción
                 </h3>
                 <p style={{ color: '#cbd5e1', fontSize: '0.92rem' }}>
-                  Haz clic en <strong>&ldquo;👤 Inscribirme en este Grupo&rdquo;</strong>, escribe tu nombre completo y tu correo electrónico personal (asegúrate de escribirlo sin errores, ahí llegará el nombre de tu amigo secreto).
+                  Haz clic en <strong>&ldquo;👤 Inscribirme en este Grupo&rdquo;</strong>, escribe tu nombre completo, tu correo electrónico personal y, si quieres, un <strong>PIN personal</strong> (opcional) para poder editar tus datos luego.
                 </p>
               </div>
             </div>

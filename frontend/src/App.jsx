@@ -263,8 +263,20 @@ export default function App() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                     <h2 style={{ fontSize: '2rem', fontWeight: '800' }}>{group.name}</h2>
-                    <span className={`status-badge ${group.status === 'OPEN' ? 'status-open' : 'status-closed'}`}>
-                      {group.status === 'OPEN' ? '🟢 Registro Abierto' : '🔴 Sorteo Realizado'}
+                    <span className={`status-badge ${
+                      group.status === 'OPEN'
+                        ? 'status-open'
+                        : group.status === 'DRAW_PARTIAL' || group.status === 'DRAWING'
+                          ? 'status-partial'
+                          : 'status-closed'
+                    }`}>
+                      {group.status === 'OPEN'
+                        ? '🟢 Registro Abierto'
+                        : group.status === 'DRAW_PARTIAL'
+                          ? '⚠️ Envío Incompleto'
+                          : group.status === 'DRAWING'
+                            ? '⏳ Sorteando...'
+                            : '🔴 Sorteo Realizado'}
                     </span>
                   </div>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
@@ -282,6 +294,14 @@ export default function App() {
                         🎲 Realizar Sorteo
                       </button>
                     </>
+                  ) : group.status === 'DRAW_PARTIAL' ? (
+                    <button className="btn-gold" onClick={() => setIsAdminDrawOpen(true)}>
+                      🔁 Reintentar Envío de Correos
+                    </button>
+                  ) : group.status === 'DRAWING' ? (
+                    <div style={{ padding: '12px 20px', background: 'rgba(245,158,11,0.15)', border: '1px solid #f59e0b', borderRadius: '12px', color: '#fbbf24', fontSize: '0.95rem', fontWeight: '600' }}>
+                      ⏳ El sorteo está en proceso, actualiza en unos segundos
+                    </div>
                   ) : (
                     <div style={{ padding: '12px 20px', background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: '12px', color: '#4ade80', fontSize: '0.95rem', fontWeight: '600' }}>
                       ✅ El sorteo fue realizado y los correos han sido enviados
@@ -291,8 +311,16 @@ export default function App() {
               </div>
             </div>
 
-            {/* Draw Success Alert Banner */}
-            {drawSuccessInfo && (
+            {/* Draw Result Alert Banner */}
+            {drawSuccessInfo && drawSuccessInfo.status === 'DRAW_PARTIAL' && (
+              <div className="glass-card" style={{ padding: '24px', marginBottom: '32px', background: 'rgba(245,158,11,0.18)', border: '1px solid #f59e0b' }}>
+                <h3 style={{ color: '#fbbf24', fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>⚠️ Sorteo guardado con envíos pendientes</h3>
+                <p style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
+                  Se enviaron {drawSuccessInfo.emails_sent} de {drawSuccessInfo.total_participants} correos ({drawSuccessInfo.emails_failed} fallaron). Las asignaciones no cambiarán; usa el botón <strong>&ldquo;🔁 Reintentar Envío de Correos&rdquo;</strong> para completar los faltantes.
+                </p>
+              </div>
+            )}
+            {drawSuccessInfo && drawSuccessInfo.status !== 'DRAW_PARTIAL' && (
               <div className="glass-card" style={{ padding: '24px', marginBottom: '32px', background: 'rgba(34,197,94,0.2)', border: '1px solid #22c55e' }}>
                 <h3 style={{ color: '#4ade80', fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>🎉 ¡Sorteo completado con éxito!</h3>
                 <p style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
@@ -445,6 +473,7 @@ export default function App() {
             isOpen={isAdminDrawOpen} 
             onClose={() => setIsAdminDrawOpen(false)} 
             groupId={group.group_id} 
+            groupStatus={group.status}
             onDrawSuccess={handleDrawSuccess} 
           />
         </>

@@ -10,6 +10,7 @@ function EditParticipantForm({
 }) {
   const [name, setName] = useState(participant.name || '');
   const [email, setEmail] = useState(participant.email || '');
+  const [passcode, setPasscode] = useState('');
   const [selectedExclusions, setSelectedExclusions] = useState(participant.excluded_participant_ids || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +39,8 @@ function EditParticipantForm({
         participant.participant_id,
         name.trim(),
         email.trim(),
-        selectedExclusions
+        selectedExclusions,
+        passcode
       );
       onParticipantUpdated();
       onClose();
@@ -124,6 +126,20 @@ function EditParticipantForm({
               })}
             </div>
           )}
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">
+            Tu PIN Personal o Clave de Administrador
+          </label>
+          <input 
+            type="password" 
+            className="form-input" 
+            placeholder="Ingresa tu PIN personal o la clave del organizador" 
+            value={passcode} 
+            onChange={(e) => setPasscode(e.target.value)} 
+            required 
+          />
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '28px' }}>
