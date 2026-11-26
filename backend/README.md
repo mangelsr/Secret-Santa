@@ -30,10 +30,11 @@ The draw engine solves historical exclusion constraints using a **Randomized Bac
 | Method | Path | Description |
 | --- | --- | --- |
 | `POST` | `/api/v1/groups` | Create a new Christmas group with an admin passcode |
-| `GET` | `/api/v1/groups/{group_id}` | Get group details and public list of participants |
-| `POST` | `/api/v1/groups/{group_id}/participants` | Register a participant specifying historical exclusions |
+| `GET` | `/api/v1/groups/{group_id}` | Get group details and public list of participants (emails masked) |
+| `POST` | `/api/v1/groups/{group_id}/participants` | Register a participant specifying historical exclusions and optional edit PIN |
+| `PUT` | `/api/v1/groups/{group_id}/participants/{participant_id}` | Update a participant (Requires `X-Admin-Passcode` or personal edit PIN) |
 | `DELETE` | `/api/v1/groups/{group_id}/participants/{participant_id}` | Remove a participant (Requires `X-Admin-Passcode` header) |
-| `POST` | `/api/v1/groups/{group_id}/draw` | Execute secret draw and dispatch emails via AWS SES |
+| `POST` | `/api/v1/groups/{group_id}/draw` | Execute secret draw (or retry pending emails) via SMTP / AWS SES |
 | `GET` | `/api/v1/health` | Lambda service healthcheck |
 
 ---

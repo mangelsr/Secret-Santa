@@ -403,3 +403,61 @@ def test_cors_restricts_origins_and_disables_credentials():
     assert allowed.headers.get("access-control-allow-origin") == "http://localhost:5173"
     assert allowed.headers.get("access-control-allow-credentials") != "true"
 
+
+def test_health_and_not_found_and_closed_group_guards():
+    fake_db = InMemoryDynamoDBService()
+    with patch("app.api.routes.db_service", fake_db):
+        health = client.get("/api/v1/health")
+        assert health.status_code == 200
+        assert health.json()["status"] == "ok"
+
+        assert client.get("/api/v1/groups/nonexistent").status_code == 404
+
+        group_id = _create_sample_group(fake_db)
+        p1 = client.post(
+            f"/api/v1/groups/{group_id}/participants",
+            json={"name": "Ana", "email": "ana@example.com", "excluded_participant_ids": []},
+        )
+        assert p1.status_code == 201
+        pid = p1.json()["participant_id"]
+
+        # Duplicate email rejected (case-insensitive)
+        dup = client.post(
+            f"/api/v1/groups/{group_id}/participants",
+            json={"name": "Ana 2", "email": "ANA@example.com", "excluded_participant_ids": []},
+        )
+        assert dup.status_code == 400
+
+        # Non-existent participant on delete -> 404
+        missing_del = client.delete(
+            f"/api/v1/groups/{group_id}/participants/p-missing",
+            headers={"X-Admin-Passcode": "admin123"},
+        )
+        assert missing_del.status_code == 404
+
+        # Closed group rejects register, update, and delete
+        fake_db.groups[group_id]["status"] = "CLOSED"
+        assert (
+            client.post(
+                f"/api/v1/groups/{group_id}/participants",
+                json={"name": "Bob", "email": "bob@example.com", "excluded_participant_ids": []},
+            ).status_code
+            == 400
+        )
+        assert (
+            client.put(
+                f"/api/v1/groups/{group_id}/participants/{pid}",
+                headers={"X-Admin-Passcode": "admin123"},
+                json={"name": "Ana New", "excluded_participant_ids": []},
+            ).status_code
+            == 400
+        )
+        assert (
+            client.delete(
+                f"/api/v1/groups/{group_id}/participants/{pid}",
+                headers={"X-Admin-Passcode": "admin123"},
+            ).status_code
+            == 400
+        )
+
+

@@ -275,12 +275,16 @@ log_step "4. Querying Deployed API Gateway URL & Building Frontend"
 STACK_NAME="santa-secreto-app-${STAGE}"
 HTTP_API_URL=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" --output text 2>/dev/null || echo "")
 
+if [ -z "$HTTP_API_URL" ] || [ "$HTTP_API_URL" = "None" ]; then
+    HTTP_API_URL=$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text 2>/dev/null || echo "")
+fi
+
 if [ -n "$HTTP_API_URL" ] && [ "$HTTP_API_URL" != "None" ]; then
-    API_ENDPOINT="${HTTP_API_URL}/api/v1"
+    API_ENDPOINT="${HTTP_API_URL%/}/api/v1"
     log_success "Detected deployed Backend API Endpoint: ${BOLD}${API_ENDPOINT}${NC}"
 else
-    log_warning "Could not query HttpApiUrl from CloudFormation. Falling back to default stage API URL format."
-    API_ENDPOINT="http://localhost:8000/api/v1"
+    log_error "Could not query HttpApiUrl or ApiUrl from CloudFormation stack '${STACK_NAME}'. Aborting before building a broken SPA."
+    exit 1
 fi
 
 cd "$ROOT_DIR/frontend"
@@ -319,7 +323,8 @@ fi
 if [ -n "$CF_URL" ] && [ "$CF_URL" != "None" ]; then
     FRONTEND_URL="$CF_URL"
 else
-    FRONTEND_URL="http://santa-secreto-frontend-${STAGE}.s3-website-${REGION}.amazonaws.com"
+    log_warning "Could not query CloudFrontUrl from CloudFormation stack '${STACK_NAME}'."
+    FRONTEND_URL="(Check AWS CloudFront console for distribution URL)"
 fi
 
 log_step "6. Deployment Complete! 🎄✨"

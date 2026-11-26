@@ -13,6 +13,11 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    setError('');
+    onClose();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -20,7 +25,10 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
 
     try {
       const newGroup = await createGroup(name, adminEmail, adminPasscode);
-      onGroupCreated(newGroup, adminPasscode);
+      setName('');
+      setAdminEmail('');
+      setAdminPasscode('');
+      onGroupCreated(newGroup);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -30,11 +38,11 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content glass-card glow-gold" style={{ padding: '32px' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>🎄 Crear Grupo Navideño</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+          <button onClick={handleClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
         </div>
 
         {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
@@ -77,7 +85,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
           </div>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '28px' }}>
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn-secondary" onClick={handleClose}>Cancelar</button>
             <button type="submit" className="btn-festive" disabled={loading}>
               {loading ? 'Creando...' : '✨ Crear Grupo'}
             </button>

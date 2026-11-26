@@ -11,14 +11,14 @@ A serverless web application to organize **Secret Santa** gift exchanges for Chr
                                     │
                     ┌───────────────┴───────────────┐
                     ▼                               ▼
-     [ Cloudflare CDN / SSL ]              [ AWS API Gateway ]
+     [ AWS CloudFront (HTTPS / OAC) ]      [ AWS API Gateway ]
                     │                               │
                     ▼                               ▼
-    [ AWS S3 Bucket (React SPA) ]       [ AWS Lambda (FastAPI) ]
+     [ AWS S3 Bucket (Private SPA) ]    [ AWS Lambda (FastAPI) ]
                                                     │
                                     ┌───────────────┴───────────────┐
                                     ▼                               ▼
-                          [ AWS DynamoDB Table ]         [ AWS SES Email ]
+                          [ AWS DynamoDB Table ]      [ SMTP / AWS SES Email ]
 ```
 
 ### Tech Stack
@@ -26,8 +26,8 @@ A serverless web application to organize **Secret Santa** gift exchanges for Chr
 * **Frontend:** React, Vite, `pnpm`, CSS3 with Glassmorphic aesthetic and responsive layout.
 * **Backend:** FastAPI, Mangum (ASGI adapter), Python 3.14, Pydantic, Boto3.
 * **Infrastructure as Code (IaC):** Open Serverless (`osls` v4, `serverless.yml`).
-* **AWS Services:** AWS Lambda, AWS API Gateway, AWS DynamoDB, AWS S3, AWS SES.
-* **CDN & DNS:** Cloudflare CDN with HTTPS proxy and SPA fallback routing.
+* **AWS Services:** AWS Lambda, AWS API Gateway, AWS DynamoDB, AWS S3 (private + OAC), AWS CloudFront, AWS SSM Parameter Store, AWS SES.
+* **CDN & Routing:** AWS CloudFront CDN with HTTPS redirect and SPA fallback routing (`403`/`404` -> `/index.html`).
 
 ---
 
