@@ -46,3 +46,13 @@ def verify_passcode(plain_passcode: str, stored_passcode: str) -> bool:
         return hmac.compare_digest(candidate_hash, expected_hash)
 
     return hmac.compare_digest(plain_passcode, stored_passcode)
+
+
+def mask_email(email: str) -> str:
+    """Mask an email address for public display (e.g. 'carlos@example.com' -> 'ca***@example.com')."""
+    if not email or "@" not in email:
+        return "***"
+    local, domain = email.split("@", 1)
+    visible = local[:2] if len(local) > 2 else local[:1]
+    return f"{visible}***@{domain}"
+

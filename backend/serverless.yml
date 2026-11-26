@@ -17,8 +17,9 @@ provider:
     GROUPS_TABLE: ${self:custom.groupsTableName}
     SES_SENDER_EMAIL: ${param:sender-email, opt:sender-email, 'notificaciones@tudominio.com'}
     STAGE: ${self:provider.stage}
+    ALLOWED_ORIGINS: !Sub "https://${CloudFrontDistribution.DomainName},http://localhost:5173,http://127.0.0.1:5173"
     SMTP_USER: ${param:smtp-user, env:SMTP_USER, ''}
-    SMTP_PASSWORD: ${param:smtp-password, env:SMTP_PASSWORD, ''}
+    SMTP_PASSWORD_PARAM: /santa-secreto/${self:provider.stage}/smtp-password
     SMTP_HOST: ${param:smtp-host, env:SMTP_HOST, 'smtp.gmail.com'}
     SMTP_PORT: ${param:smtp-port, env:SMTP_PORT, '587'}
     SMTP_FROM_NAME: ${param:smtp-from-name, env:SMTP_FROM_NAME, 'Santa Secreto 🎅'}
@@ -41,6 +42,11 @@ provider:
             - ses:SendEmail
             - ses:SendRawEmail
           Resource: "*"
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/santa-secreto/${self:provider.stage}/*"
 
 custom:
   groupsTableName: santa-secreto-groups-${self:provider.stage}
@@ -80,14 +86,20 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.frontendBucketName}
-        WebsiteConfiguration:
-          IndexDocument: index.html
-          ErrorDocument: index.html
         PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    CloudFrontOriginAccessControl:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: !Sub "${AWS::StackName}-s3-oac"
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
 
     FrontendBucketPolicy:
       Type: AWS::S3::BucketPolicy
@@ -95,11 +107,15 @@ resources:
         Bucket: !Ref FrontendBucket
         PolicyDocument:
           Statement:
-            - Sid: PublicReadGetObject
+            - Sid: AllowCloudFrontServicePrincipalReadOnly
               Effect: Allow
-              Principal: "*"
+              Principal:
+                Service: cloudfront.amazonaws.com
               Action: s3:GetObject
               Resource: !Join ["", ["arn:aws:s3:::", !Ref FrontendBucket, "/*"]]
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
     CloudFrontDistribution:
       Type: AWS::CloudFront::Distribution
@@ -109,14 +125,13 @@ resources:
           Comment: "CDN distribution for Santa Secreto SPA frontend"
           DefaultRootObject: index.html
           Origins:
-            - Id: S3WebsiteOrigin
-              DomainName: !Select [1, !Split ["//", !GetAtt FrontendBucket.WebsiteURL]]
-              CustomOriginConfig:
-                HTTPPort: 80
-                HTTPSPort: 443
-                OriginProtocolPolicy: http-only
+            - Id: S3BucketOrigin
+              DomainName: !GetAtt FrontendBucket.RegionalDomainName
+              S3OriginConfig:
+                OriginAccessIdentity: ""
+              OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
           DefaultCacheBehavior:
-            TargetOriginId: S3WebsiteOrigin
+            TargetOriginId: S3BucketOrigin
             ViewerProtocolPolicy: redirect-to-https
             AllowedMethods:
               - GET
@@ -150,8 +165,8 @@ resources:
   Outputs:
     ApiUrl:
       Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
-    S3WebsiteUrl:
-      Value: !GetAtt FrontendBucket.WebsiteURL
+    S3BucketDomainName:
+      Value: !GetAtt FrontendBucket.RegionalDomainName
     CloudFrontUrl:
       Value: !Sub "https://${CloudFrontDistribution.DomainName}"
     CloudFrontDistributionId:

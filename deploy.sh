@@ -252,7 +252,14 @@ cd "$ROOT_DIR/backend"
 
 DEPLOY_PARAMS="--stage $STAGE --region $REGION --param=\"sender-email=$SENDER_EMAIL\""
 if [ -n "$SMTP_USER" ]; then
-    DEPLOY_PARAMS="$DEPLOY_PARAMS --param=\"smtp-user=$SMTP_USER\" --param=\"smtp-password=$SMTP_PASSWORD\" --param=\"smtp-host=$SMTP_HOST\" --param=\"smtp-port=$SMTP_PORT\" --param=\"smtp-from-name=$SMTP_FROM_NAME\""
+    if [ -n "$SMTP_PASSWORD" ]; then
+        SSM_PARAM_NAME="/santa-secreto/${STAGE}/smtp-password"
+        log_info "Storing SMTP password securely in AWS SSM Parameter Store (${SSM_PARAM_NAME})..."
+        export SMTP_PASSWORD
+        python3 -c 'import json, os, sys; print(json.dumps({"Name": sys.argv[1], "Value": os.environ["SMTP_PASSWORD"], "Type": "SecureString", "Overwrite": True}))' "$SSM_PARAM_NAME" \
+            | aws ssm put-parameter --region "$REGION" --cli-input-json file:///dev/stdin >/dev/null
+    fi
+    DEPLOY_PARAMS="$DEPLOY_PARAMS --param=\"smtp-user=$SMTP_USER\" --param=\"smtp-host=$SMTP_HOST\" --param=\"smtp-port=$SMTP_PORT\" --param=\"smtp-from-name=$SMTP_FROM_NAME\""
 fi
 
 if [ "$PKG_MANAGER" = "pnpm" ]; then

@@ -10,13 +10,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration allowing requests from React SPA
+# CORS configuration allowing requests only from configured origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Passcode", "X-Edit-Passcode"],
 )
 
 app.include_router(router)

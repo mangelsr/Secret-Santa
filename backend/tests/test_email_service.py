@@ -47,3 +47,33 @@ def test_email_service_ses_fallback():
         
         assert success is True
         service._ses_client.send_email.assert_called_once()
+
+
+def test_email_service_escapes_html_and_sanitizes_subject():
+    service = EmailService()
+
+    with patch("app.services.email_service.settings") as mock_settings:
+        mock_settings.SMTP_USER = ""
+        mock_settings.SMTP_PASSWORD = ""
+        mock_settings.SES_SENDER_EMAIL = "notifications@test.com"
+
+        service._ses_client = MagicMock()
+        service._ses_client.send_email.return_value = {"MessageId": "abc"}
+
+        success = service.send_secret_santa_notification(
+            giver_email="participant@gmail.com",
+            giver_name="<script>alert(1)</script>",
+            receiver_name="Maria & <Bob>",
+            group_name="Grupo\r\nBcc:evil@x.com",
+        )
+
+        assert success is True
+        call_kwargs = service._ses_client.send_email.call_args.kwargs
+        subject = call_kwargs["Message"]["Subject"]["Data"]
+        html_body = call_kwargs["Message"]["Body"]["Html"]["Data"]
+
+        assert "\r" not in subject and "\n" not in subject
+        assert "<script>" not in html_body
+        assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html_body
+        assert "Maria &amp; &lt;Bob&gt;" in html_body
+

@@ -191,6 +191,8 @@ def _create_sample_group(fake_db: InMemoryDynamoDBService) -> str:
     )
     assert resp.status_code == 201
     group_id = resp.json()["group_id"]
+    assert len(group_id) >= 20
+    assert resp.json()["admin_email"] == "ad***@example.com"
     # Verify passcode was hashed in storage and not leaked in response
     assert "admin_passcode" not in resp.json()
     assert fake_db.groups[group_id]["admin_passcode"].startswith("pbkdf2_sha256$")
@@ -251,23 +253,32 @@ def test_update_requires_admin_or_personal_pin():
         )
         assert unauth.status_code == 401
 
-        # Personal edit PIN -> 200
+        # Personal edit PIN -> 200 (without changing email, preserves real email in DB)
         owner_ok = client.put(
             f"/api/v1/groups/{group_id}/participants/{pid}",
             headers={"X-Admin-Passcode": "luis9999"},
-            json={"name": "Luis Edited", "email": "luis@example.com", "excluded_participant_ids": []},
+            json={"name": "Luis Edited", "excluded_participant_ids": []},
         )
         assert owner_ok.status_code == 200
         assert owner_ok.json()["name"] == "Luis Edited"
+        assert owner_ok.json()["email"] == "lu***@example.com"
+        assert fake_db.get_participant(group_id, pid)["email"] == "luis@example.com"
 
-        # Organizer admin passcode -> 200
+        # Organizer admin passcode -> 200 (changing email)
         admin_ok = client.put(
             f"/api/v1/groups/{group_id}/participants/{pid}",
             headers={"X-Admin-Passcode": "admin123"},
             json={"name": "Luis Admin", "email": "luis2@example.com", "excluded_participant_ids": []},
         )
         assert admin_ok.status_code == 200
-        assert admin_ok.json()["email"] == "luis2@example.com"
+        assert admin_ok.json()["email"] == "lu***@example.com"
+        assert fake_db.get_participant(group_id, pid)["email"] == "luis2@example.com"
+
+        # GET /groups/{id} masks all emails
+        group_view = client.get(f"/api/v1/groups/{group_id}")
+        assert group_view.status_code == 200
+        assert group_view.json()["admin_email"] == "ad***@example.com"
+        assert group_view.json()["participants"][0]["email"] == "lu***@example.com"
 
 
 def test_passcode_brute_force_lockout():
@@ -370,3 +381,25 @@ def test_draw_returns_409_when_drawing_in_progress():
             json={"admin_passcode": "admin123"},
         )
         assert resp.status_code == 409
+
+
+def test_cors_restricts_origins_and_disables_credentials():
+    disallowed = client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "https://evil.example.com",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert "access-control-allow-origin" not in disallowed.headers
+
+    allowed = client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert allowed.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    assert allowed.headers.get("access-control-allow-credentials") != "true"
+

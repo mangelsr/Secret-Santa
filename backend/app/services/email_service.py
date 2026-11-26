@@ -1,3 +1,4 @@
+import html
 import smtplib
 import threading
 from email.mime.multipart import MIMEMultipart
@@ -32,7 +33,12 @@ class EmailService:
         Prefers SMTP (Gmail) if SMTP_USER and SMTP_PASSWORD are configured, 
         otherwise falls back to AWS SES.
         """
-        subject = f"🎄 ¡Tu amigo secreto para '{group_name}' ha sido asignado! 🎁"
+        safe_group_subject = group_name.replace("\r", " ").replace("\n", " ").strip()
+        safe_giver_name = html.escape(giver_name, quote=True)
+        safe_receiver_name = html.escape(receiver_name, quote=True)
+        safe_group_name = html.escape(group_name, quote=True)
+
+        subject = f"🎄 ¡Tu amigo secreto para '{safe_group_subject}' ha sido asignado! 🎁"
         
         html_body = f"""
         <!DOCTYPE html>
@@ -56,12 +62,12 @@ class EmailService:
                     <h1>🎅 Amigo Secreto Navideño 🎁</h1>
                 </div>
                 <div class="content">
-                    <h2>¡Hola {giver_name}!</h2>
-                    <p>El grupo <strong>{group_name}</strong> ha cerrado inscripciones y el sorteo oficial se ha realizado con éxito.</p>
+                    <h2>¡Hola {safe_giver_name}!</h2>
+                    <p>El grupo <strong>{safe_group_name}</strong> ha cerrado inscripciones y el sorteo oficial se ha realizado con éxito.</p>
                     
                     <div class="card">
                         <p style="margin:0; font-size:16px; color:#4a5568;">Te tocó regalarle a:</p>
-                        <div class="target-name">✨ {receiver_name} ✨</div>
+                        <div class="target-name">✨ {safe_receiver_name} ✨</div>
                     </div>
                     
                     <p style="color: #718096; font-size: 14px;">¡Recuerda mantenerlo en secreto hasta el día de la entrega de regalos! ¡Felices Fiestas! 🎄</p>

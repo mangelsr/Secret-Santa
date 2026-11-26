@@ -9,7 +9,7 @@ class CreateGroupRequest(BaseModel):
 class GroupPublicResponse(BaseModel):
     group_id: str
     name: str
-    admin_email: EmailStr
+    admin_email: str
     status: str
     created_at: str
 
@@ -35,17 +35,27 @@ class RegisterParticipantRequest(BaseModel):
 
 class UpdateParticipantRequest(BaseModel):
     name: str = Field(..., description="Participant full name")
-    email: EmailStr = Field(..., description="Participant email address to receive secret assignment")
+    email: Optional[EmailStr] = Field(
+        default=None,
+        description="Optional new email address; if omitted, keeps the current email"
+    )
     excluded_participant_ids: List[str] = Field(
         default_factory=list, 
         description="IDs or names of family members previously gifted to in past years"
     )
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, value: Optional[str]) -> Optional[str]:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
 class ParticipantPublicResponse(BaseModel):
     participant_id: str
     group_id: str
     name: str
-    email: EmailStr
+    email: str
     excluded_participant_ids: List[str]
     created_at: str
 

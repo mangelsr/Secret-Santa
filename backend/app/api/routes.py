@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+import secrets
 import time
 from typing import Dict, List, Optional, Tuple
 import uuid
@@ -8,7 +9,7 @@ from fastapi import APIRouter, Header, HTTPException, status
 
 from app.core.config import settings
 from app.core.santa_draw import generate_secret_santa_draw
-from app.core.security import hash_passcode, verify_passcode
+from app.core.security import hash_passcode, mask_email, verify_passcode
 from app.schemas.models import (
     CreateGroupRequest,
     ExecuteDrawRequest,
@@ -156,7 +157,7 @@ def _dispatch_assignments_concurrently(
 
 @router.post("/groups", response_model=GroupPublicResponse, status_code=status.HTTP_201_CREATED)
 def create_group(payload: CreateGroupRequest):
-    group_id = f"g-{uuid.uuid4().hex[:8]}"
+    group_id = f"g-{secrets.token_urlsafe(16)}"
     created_at = _utc_now_iso()
     passcode_hash = hash_passcode(payload.admin_passcode)
 
@@ -171,7 +172,7 @@ def create_group(payload: CreateGroupRequest):
     return GroupPublicResponse(
         group_id=item["group_id"],
         name=item["name"],
-        admin_email=item["admin_email"],
+        admin_email=mask_email(item["admin_email"]),
         status=item["status"],
         created_at=item["created_at"],
     )
@@ -189,7 +190,7 @@ def get_group_details(group_id: str):
             participant_id=p["participant_id"],
             group_id=p["group_id"],
             name=p["name"],
-            email=p["email"],
+            email=mask_email(p["email"]),
             excluded_participant_ids=p.get("excluded_participant_ids", []),
             created_at=p["created_at"],
         )
@@ -199,7 +200,7 @@ def get_group_details(group_id: str):
     return GroupWithParticipantsResponse(
         group_id=group["group_id"],
         name=group["name"],
-        admin_email=group["admin_email"],
+        admin_email=mask_email(group["admin_email"]),
         status=group["status"],
         created_at=group["created_at"],
         participants=participants,
@@ -251,7 +252,7 @@ def register_participant(group_id: str, payload: RegisterParticipantRequest):
         participant_id=item["participant_id"],
         group_id=item["group_id"],
         name=item["name"],
-        email=item["email"],
+        email=mask_email(item["email"]),
         excluded_participant_ids=item["excluded_participant_ids"],
         created_at=item["created_at"],
     )
@@ -281,8 +282,10 @@ def update_participant(
 
     _verify_participant_edit_access(group, current_participant, x_admin_passcode or x_edit_passcode)
 
+    effective_email = payload.email or current_participant["email"]
+
     if any(
-        p["email"].lower() == payload.email.lower() and p["participant_id"] != participant_id
+        p["email"].lower() == effective_email.lower() and p["participant_id"] != participant_id
         for p in existing_participants
     ):
         raise HTTPException(
@@ -298,7 +301,7 @@ def update_participant(
             group_id=group_id,
             participant_id=participant_id,
             name=payload.name,
-            email=payload.email,
+            email=effective_email,
             excluded_participant_ids=cleaned_exclusions,
             old_email=current_participant["email"],
             updated_at=now_iso,
@@ -317,7 +320,7 @@ def update_participant(
         participant_id=participant_id,
         group_id=group_id,
         name=payload.name,
-        email=payload.email,
+        email=mask_email(effective_email),
         excluded_participant_ids=cleaned_exclusions,
         created_at=current_participant.get("created_at", ""),
     )

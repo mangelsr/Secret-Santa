@@ -9,7 +9,7 @@ function EditParticipantForm({
   onClose 
 }) {
   const [name, setName] = useState(participant.name || '');
-  const [email, setEmail] = useState(participant.email || '');
+  const [email, setEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [selectedExclusions, setSelectedExclusions] = useState(participant.excluded_participant_ids || []);
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ function EditParticipantForm({
         groupId,
         participant.participant_id,
         name.trim(),
-        email.trim(),
+        email.trim() || null,
         selectedExclusions,
         passcode
       );
@@ -86,14 +86,18 @@ function EditParticipantForm({
         </div>
 
         <div className="form-group">
-          <label className="form-label">Correo Electrónico (para recibir la asignación)</label>
+          <label className="form-label">
+            Nuevo Correo Electrónico (opcional)
+            <span style={{ display: 'block', fontWeight: '400', fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
+              Actual: <code>{participant.email}</code>. Déjalo vacío para mantener el correo registrado.
+            </span>
+          </label>
           <input 
             type="email" 
             className="form-input" 
-            placeholder="carlos@ejemplo.com" 
+            placeholder="Dejar vacío para conservar el actual" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
-            required 
           />
         </div>
 
