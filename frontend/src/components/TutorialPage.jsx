@@ -4,10 +4,10 @@ const STEPS = [
   {
     number: '1',
     icon: '🎄',
-    title: 'Crea un Grupo Navideño',
+    title: 'Crea un Grupo',
     role: 'Organizador',
     description:
-      'El organizador crea el grupo ingresando un nombre (ej. "Navidad Familia García 2026"), su correo y una Clave de Administrador (PIN) secreta que usará al final para ejecutar el sorteo.',
+      'El organizador crea el grupo ingresando un nombre (ej. "Intercambio Oficina 2026" o "Amigos 2026"), su correo y una Clave de Administrador (PIN) secreta que usará al final para ejecutar el sorteo.',
   },
   {
     number: '2',
@@ -15,7 +15,7 @@ const STEPS = [
     title: 'Comparte el Enlace o Código',
     role: 'Organizador',
     description:
-      'Al crear el grupo se genera un código único (ej. g-12345678). Usa el botón "🔗 Copiar Enlace" de la barra superior y envíalo por WhatsApp o correo a toda la familia.',
+      'Al crear el grupo se genera un código único (ej. g-12345678). Usa el botón "🔗 Copiar Enlace" de la barra superior y envíalo por WhatsApp, Slack o correo a todos los participantes.',
   },
   {
     number: '3',
@@ -23,7 +23,7 @@ const STEPS = [
     title: 'Inscríbete y Marca Exclusiones',
     role: 'Todos',
     description:
-      'Cada persona entra al enlace, se registra con su nombre y correo único, y selecciona a los familiares a quienes ya les regaló en años pasados para evitar repeticiones.',
+      'Cada persona entra al enlace, se registra con su nombre y correo único, y selecciona a los participantes a quienes ya les regaló en ediciones pasadas para evitar repeticiones.',
   },
   {
     number: '4',
@@ -39,7 +39,7 @@ const FAQS = [
   {
     question: 'Fui el primero en registrarme y no aparecía nadie para excluir, ¿qué hago?',
     answer:
-      '¡Es normal! Regístrate normalmente primero. Una vez que tus familiares se vayan inscribiendo en el grupo, busca tu tarjeta y haz clic en "✏️ Editar" para agregar tus exclusiones antes de que el organizador cierre el grupo.',
+      '¡Es normal! Regístrate normalmente primero. Una vez que los demás participantes se vayan inscribiendo en el grupo, busca tu tarjeta y haz clic en "✏️ Editar" para agregar tus exclusiones antes de que el organizador cierre el grupo.',
   },
   {
     question: '¿Cuántos participantes se necesitan como mínimo para el sorteo?',
@@ -52,7 +52,7 @@ const FAQS = [
       'Si el algoritmo detecta que las reglas de exclusión impiden asignar a todos sin conflictos, mostrará un aviso antes de cerrar el grupo. Pueden ajustar algunas exclusiones usando "✏️ Editar" e intentar el sorteo nuevamente.',
   },
   {
-    question: '¿Puedo inscribir a dos familiares con el mismo correo electrónico?',
+    question: '¿Puedo inscribir a dos participantes con el mismo correo electrónico?',
     answer:
       'No. Cada participante dentro de un mismo grupo debe tener un correo electrónico único para garantizar que reciba su asignación de forma privada y confidencial.',
   },
@@ -97,7 +97,7 @@ export default function TutorialPage({ onBackHome, onBackToGroup, onCreateClick,
           Cómo funciona Santa Secreto
         </h1>
         <p style={{ color: '#cbd5e1', fontSize: '1.05rem', maxWidth: '660px', margin: '0 auto 24px' }}>
-          Organiza tu intercambio navideño en pocos minutos, evita regalos repetidos de años anteriores y mantén el secreto de principio a fin.
+          Organiza tu intercambio de regalos con amigos, colegas de trabajo o familia en pocos minutos, evita repeticiones de años anteriores y mantén el secreto de principio a fin.
         </p>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -198,10 +198,10 @@ export default function TutorialPage({ onBackHome, onBackToGroup, onCreateClick,
               <div className="tutorial-guide-icon">2️⃣</div>
               <div>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '4px' }}>
-                  Invita a tu familia o amigos
+                  Invita a los participantes
                 </h3>
                 <p style={{ color: '#cbd5e1', fontSize: '0.92rem' }}>
-                  Copia el enlace con el botón <strong>&ldquo;🔗 Copiar Enlace&rdquo;</strong> o comparte el código del grupo (ejemplo: <code style={{ color: '#f59e0b' }}>g-1a2b3c4d</code>). Recuerda inscribirte tú también en el grupo si vas a participar en el intercambio.
+                  Copia el enlace con el botón <strong>&ldquo;🔗 Copiar Enlace&rdquo;</strong> o comparte el código del grupo (ejemplo: <code style={{ color: '#f59e0b' }}>g-1a2b3c4d</code>) con tus amigos, compañeros o familiares. Recuerda inscribirte tú también si vas a participar en el intercambio.
                 </p>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function TutorialPage({ onBackHome, onBackToGroup, onCreateClick,
               <div className="tutorial-guide-icon">1️⃣</div>
               <div>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '4px' }}>
-                  Entra al grupo de tu familia
+                  Entra al grupo del intercambio
                 </h3>
                 <p style={{ color: '#cbd5e1', fontSize: '0.92rem' }}>
                   Abre el enlace que te compartió el organizador, o escribe el código del grupo (ej. <code style={{ color: '#f59e0b' }}>g-1a2b3c4d</code>) en el buscador de la página de inicio y pulsa <strong>&ldquo;Buscar&rdquo;</strong>.
@@ -263,7 +263,7 @@ export default function TutorialPage({ onBackHome, onBackToGroup, onCreateClick,
                   Marca a quiénes ya les regalaste (Exclusiones 🚫)
                 </h3>
                 <p style={{ color: '#cbd5e1', fontSize: '0.92rem' }}>
-                  Selecciona las etiquetas de los familiares a los que <strong>ya les diste regalo en años anteriores</strong> (o tu pareja si prefieren evitarse). Si todavía faltan personas por inscribirse, vuelve después y usa <strong>&ldquo;✏️ Editar&rdquo;</strong> en tu tarjeta para actualizar tus exclusiones.
+                  Selecciona las etiquetas de las personas a las que <strong>ya les diste regalo en años anteriores</strong> (o con quienes prefieras no coincidir). Si todavía faltan integrantes por inscribirse, vuelve después y usa <strong>&ldquo;✏️ Editar&rdquo;</strong> en tu tarjeta para actualizar tus exclusiones.
                 </p>
               </div>
             </div>

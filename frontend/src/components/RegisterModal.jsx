@@ -56,7 +56,7 @@ export default function RegisterModal({ isOpen, onClose, groupId, existingPartic
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Ej: Tío Carlos" 
+              placeholder="Ej: Carlos Pérez" 
               value={name} 
               onChange={(e) => setName(e.target.value)} 
               required 
@@ -68,7 +68,7 @@ export default function RegisterModal({ isOpen, onClose, groupId, existingPartic
             <input 
               type="email" 
               className="form-input" 
-              placeholder="carlos@familia.com" 
+              placeholder="carlos@ejemplo.com" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
@@ -79,13 +79,13 @@ export default function RegisterModal({ isOpen, onClose, groupId, existingPartic
             <label className="form-label">
               Exclusiones Navideñas 🚫
               <span style={{ display: 'block', fontWeight: '400', fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>
-                Selecciona a qué familiares **ya les has regalado en años anteriores** para que el algoritmo no te los vuelva a asignar:
+                Selecciona a qué personas <strong>ya les has regalado en años anteriores</strong> (o prefieres evitar) para que el algoritmo no te las vuelva a asignar:
               </span>
             </label>
 
             {existingParticipants.length === 0 ? (
               <p style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic', marginTop: '8px' }}>
-                Eres el primero en registrarte en este grupo. Tus familiares podrán seleccionarte a ti cuando se registren.
+                Eres el primero en registrarte en este grupo. Los demás participantes podrán seleccionarte cuando se registren.
               </p>
             ) : (
               <div className="tag-selector">

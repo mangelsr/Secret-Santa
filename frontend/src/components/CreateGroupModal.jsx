@@ -45,7 +45,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Ej: Navidad Familia García 2026" 
+              placeholder="Ej: Intercambio Oficina 2026" 
               value={name} 
               onChange={(e) => setName(e.target.value)} 
               required 
@@ -57,7 +57,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
             <input 
               type="email" 
               className="form-input" 
-              placeholder="organizador@familia.com" 
+              placeholder="organizador@ejemplo.com" 
               value={adminEmail} 
               onChange={(e) => setAdminEmail(e.target.value)} 
               required 

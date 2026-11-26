@@ -19,7 +19,7 @@ export default function Navbar({ onCreateClick, onTutorialClick, onHomeClick, cu
             <h1 style={{ fontSize: '1.4rem', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b, #ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Santa Secreto
             </h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Edición Familiar 🎁</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Intercambio de Regalos 🎁</p>
           </div>
         </div>
 

@@ -63,7 +63,7 @@ class EmailService:
                     <p style="color: #718096; font-size: 14px;">¡Recuerda mantenerlo en secreto hasta el día de la entrega de regalos! ¡Felices Fiestas! 🎄</p>
                 </div>
                 <div class="footer">
-                    Organizado con la App de Santa Secreto • Navidad en Familia 🎄
+                    Organizado con la App de Santa Secreto • Intercambio de Regalos 🎄
                 </div>
             </div>
         </body>

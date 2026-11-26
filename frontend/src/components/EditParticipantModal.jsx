@@ -76,7 +76,7 @@ function EditParticipantForm({
           <input 
             type="text" 
             className="form-input" 
-            placeholder="Ej: Tío Carlos" 
+            placeholder="Ej: Carlos Pérez" 
             value={name} 
             onChange={(e) => setName(e.target.value)} 
             required 
@@ -88,7 +88,7 @@ function EditParticipantForm({
           <input 
             type="email" 
             className="form-input" 
-            placeholder="carlos@familia.com" 
+            placeholder="carlos@ejemplo.com" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
             required 
@@ -99,7 +99,7 @@ function EditParticipantForm({
           <label className="form-label">
             Exclusiones Navideñas 🚫
             <span style={{ display: 'block', fontWeight: '400', fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>
-              Selecciona a los familiares a quienes **ya les regaló en años anteriores** para evitar que le toque regalarles de nuevo:
+              Selecciona a las personas a quienes <strong>ya les regaló en años anteriores</strong> (o prefiere evitar) para evitar que le toque regalarles de nuevo:
             </span>
           </label>
 

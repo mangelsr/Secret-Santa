@@ -114,7 +114,7 @@ export default function App() {
     setGroup(newGroup);
     setGroupId(newGroup.group_id);
     window.location.hash = newGroup.group_id;
-    setNotification('¡Grupo creado exitosamente! Comparte el enlace con tu familia.');
+    setNotification('¡Grupo creado exitosamente! Comparte el enlace con los participantes.');
   };
 
   const handleDrawSuccess = (result) => {
@@ -205,7 +205,7 @@ export default function App() {
           <div className="glass-card" style={{ padding: '48px 32px', textAlign: 'center', margin: '40px 0' }}>
             <span style={{ fontSize: '4rem', display: 'block', marginBottom: '16px' }}>🎄🎅🎁</span>
             <h1 style={{ fontSize: '2.4rem', fontWeight: '800', marginBottom: '16px', background: 'linear-gradient(135deg, #f59e0b, #ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Organiza tu Santa Secreto Familiar
+              Organiza tu Santa Secreto
             </h1>
             <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 32px' }}>
               Registra integrantes, marca a quiénes <strong>ya les regalaste en años pasados</strong> para evitar repeticiones y realiza el sorteo automático con notificaciones secretas por correo.
@@ -312,7 +312,7 @@ export default function App() {
 
               {(!group.participants || group.participants.length === 0) ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  <p style={{ fontSize: '1.1rem', marginBottom: '12px' }}>Aún no hay familiares inscritos en este grupo.</p>
+                  <p style={{ fontSize: '1.1rem', marginBottom: '12px' }}>Aún no hay participantes inscritos en este grupo.</p>
                   <button className="btn-festive" onClick={() => setIsRegisterOpen(true)}>Sé el primero en inscribirte</button>
                 </div>
               ) : (
