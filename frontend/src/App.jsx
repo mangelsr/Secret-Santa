@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import CreateGroupModal from './components/CreateGroupModal';
 import RegisterModal from './components/RegisterModal';
 import EditParticipantModal from './components/EditParticipantModal';
 import DeleteParticipantModal from './components/DeleteParticipantModal';
 import AdminDrawModal from './components/AdminDrawModal';
+import TutorialPage from './components/TutorialPage';
 import { getGroupDetails } from './services/api';
 
+const TUTORIAL_HASH = 'tutorial';
+
 /**
- * Main application component managing active group view, participant cards, and modals.
+ * Main application component managing active group view, tutorial page, participant cards, and modals.
  */
 export default function App() {
   const [groupId, setGroupId] = useState('');
   const [group, setGroup] = useState(null);
+  const [isTutorial, setIsTutorial] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notification, setNotification] = useState('');
@@ -26,7 +30,7 @@ export default function App() {
   const [deletingParticipant, setDeletingParticipant] = useState(null);
   const [drawSuccessInfo, setDrawSuccessInfo] = useState(null);
 
-  const loadGroup = async (id) => {
+  const loadGroup = useCallback(async (id) => {
     setLoading(true);
     setError('');
     try {
@@ -38,25 +42,39 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Parse Group ID from URL Hash or Query Parameters
+  // Sync view and active Group ID from URL Hash or Query Parameters
   useEffect(() => {
-    const parseGroupId = () => {
+    const syncFromLocation = () => {
       const hash = window.location.hash.replace('#', '');
+      if (hash === TUTORIAL_HASH) {
+        setIsTutorial(true);
+        setError('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      setIsTutorial(false);
       const params = new URLSearchParams(window.location.search);
       const queryId = params.get('group');
-      if (hash) return hash;
-      if (queryId) return queryId;
-      return '';
+      const currentId = hash || queryId || '';
+
+      if (currentId) {
+        setGroupId(currentId);
+        loadGroup(currentId);
+      } else {
+        setGroupId('');
+        setGroup(null);
+        setError('');
+        setDrawSuccessInfo(null);
+      }
     };
 
-    const currentId = parseGroupId();
-    if (currentId) {
-      setGroupId(currentId);
-      loadGroup(currentId);
-    }
-  }, []);
+    syncFromLocation();
+    window.addEventListener('hashchange', syncFromLocation);
+    return () => window.removeEventListener('hashchange', syncFromLocation);
+  }, [loadGroup]);
 
   // Auto-hide temporary notifications
   useEffect(() => {
@@ -66,7 +84,33 @@ export default function App() {
     }
   }, [notification]);
 
+  const openHome = () => {
+    setIsTutorial(false);
+    setGroup(null);
+    setGroupId('');
+    setError('');
+    setDrawSuccessInfo(null);
+    if (window.location.search || window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
+  const openTutorial = () => {
+    setIsTutorial(true);
+    window.location.hash = TUTORIAL_HASH;
+  };
+
+  const backToGroup = () => {
+    if (!group) {
+      openHome();
+      return;
+    }
+    setIsTutorial(false);
+    window.location.hash = group.group_id;
+  };
+
   const handleGroupCreated = (newGroup) => {
+    setIsTutorial(false);
     setGroup(newGroup);
     setGroupId(newGroup.group_id);
     window.location.hash = newGroup.group_id;
@@ -112,7 +156,13 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '60px' }}>
-      <Navbar onCreateClick={() => setIsCreateOpen(true)} currentGroup={group} />
+      <Navbar
+        onCreateClick={() => setIsCreateOpen(true)}
+        onTutorialClick={openTutorial}
+        onHomeClick={openHome}
+        currentGroup={group}
+        isTutorial={isTutorial}
+      />
 
       <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
         {/* Toast Notification */}
@@ -140,20 +190,33 @@ export default function App() {
           </div>
         )}
 
+        {/* Tutorial Page */}
+        {isTutorial && (
+          <TutorialPage
+            onBackHome={openHome}
+            onBackToGroup={backToGroup}
+            onCreateClick={() => setIsCreateOpen(true)}
+            activeGroup={group}
+          />
+        )}
+
         {/* Landing Section / Group Lookup */}
-        {!group && !loading && (
+        {!isTutorial && !group && !loading && (
           <div className="glass-card" style={{ padding: '48px 32px', textAlign: 'center', margin: '40px 0' }}>
             <span style={{ fontSize: '4rem', display: 'block', marginBottom: '16px' }}>🎄🎅🎁</span>
             <h1 style={{ fontSize: '2.4rem', fontWeight: '800', marginBottom: '16px', background: 'linear-gradient(135deg, #f59e0b, #ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Organiza tu Santa Secreto Familiar
             </h1>
             <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 32px' }}>
-              Registra integrantes, marca a quiénes **ya les regalaste en años pasados** para evitar repeticiones y realiza el sorteo automático con notificaciones secretas por correo.
+              Registra integrantes, marca a quiénes <strong>ya les regalaste en años pasados</strong> para evitar repeticiones y realiza el sorteo automático con notificaciones secretas por correo.
             </p>
 
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button className="btn-festive" style={{ fontSize: '1.1rem', padding: '14px 28px' }} onClick={() => setIsCreateOpen(true)}>
                 ✨ Crear un Grupo Navideño
+              </button>
+              <button className="btn-secondary" style={{ fontSize: '1.05rem', padding: '14px 24px' }} onClick={openTutorial}>
+                📖 ¿Cómo funciona?
               </button>
             </div>
 
@@ -178,21 +241,21 @@ export default function App() {
           </div>
         )}
 
-        {loading && (
+        {!isTutorial && loading && (
           <div className="glass-card" style={{ padding: '60px', textAlign: 'center', margin: '40px 0' }}>
             <p style={{ fontSize: '1.2rem', color: '#f59e0b' }}>⌛ Cargando grupo navideño...</p>
           </div>
         )}
 
-        {error && !group && (
+        {!isTutorial && error && !group && (
           <div className="glass-card" style={{ padding: '32px', textAlign: 'center', margin: '40px 0', border: '1px solid #ef4444' }}>
             <p style={{ color: '#fca5a5', fontSize: '1.1rem', marginBottom: '16px' }}>❌ {error}</p>
-            <button className="btn-secondary" onClick={() => { setError(''); setGroupId(''); window.location.hash = ''; }}>Volver al Inicio</button>
+            <button className="btn-secondary" onClick={openHome}>Volver al Inicio</button>
           </div>
         )}
 
         {/* Active Group Dashboard */}
-        {group && (
+        {!isTutorial && group && (
           <div>
             {/* Group Header Card */}
             <div className="glass-card glow-gold" style={{ padding: '32px', marginBottom: '32px' }}>
